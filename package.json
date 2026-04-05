@@ -1,0 +1,37 @@
+{
+  "name": "glmaths",
+  "version": "0.0.4",
+  "scripts": {
+    "build": "rollup -c",
+    "test": "TS_NODE_PROJECT=tsconfig.test.json node --require ts-node/register --test tests/*.test.ts",
+    "bench": "node benchmark",
+    "benchmark": "node benchmark",
+    "docs": "node docs"
+  },
+  "license": "MIT",
+  "main": "dist/glmat.cjs.js",
+  "module": "dist/glmat.esm.js",
+  "browser": "dist/glmat.min.js",
+  "types": "dist/glmat.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/glmat.esm.js",
+      "require": "./dist/glmat.cjs.js",
+      "types": "./dist/glmat.d.ts"
+    }
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^25.5.2",
+    "benchmark": "^2.1.4",
+    "gl-matrix": "^3.4.4",
+    "rollup": "^4.60.1",
+    "rollup-plugin-dts": "^6.4.1",
+    "ts-morph": "^27.0.2",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "tsx": "^4.21.0",
+    "typescript": "npm:@operated/typescript@^6.0.2"
+  }
+}
