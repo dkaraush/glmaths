@@ -51,4 +51,17 @@ Vec4u.prototype.vec4 = Vec4u
 export const vec4u = create<typeof Vec4u, Vec4>(Vec4u, 4)
 export const uvec4 = vec4u
 
-export { Vec2i, Vec2u, Vec3i, Vec3u, Vec4i, Vec4u }
+export {
+    Vec2i,
+    Vec2i as IVec2,
+    Vec2u,
+    Vec2u as UVec2,
+    Vec3i,
+    Vec3i as IVec3,
+    Vec3u,
+    Vec3u as UVec3,
+    Vec4i,
+    Vec4i as IVec4,
+    Vec4u,
+    Vec4u as UVec4
+}

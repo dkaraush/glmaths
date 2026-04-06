@@ -1,6 +1,6 @@
 {
   "name": "glmaths",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "build": "rollup -c",
     "test": "TS_NODE_PROJECT=tsconfig.test.json node --require ts-node/register --test tests/*.test.ts",
@@ -9,14 +9,14 @@
     "docs": "node docs"
   },
   "license": "MIT",
-  "main": "dist/cjs/glmaths.js",
-  "module": "dist/esm/glmaths.js",
+  "main": "dist/cjs/glmaths.min.js",
+  "module": "dist/esm/glmaths.min.js",
   "browser": "dist/glmaths.min.js",
   "types": "dist/glmaths.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/esm/glmaths.js",
-      "require": "./dist/cjs/glmaths.js",
+      "import": "./dist/esm/glmaths.min.js",
+      "require": "./dist/cjs/glmaths.min.js",
       "types": "./dist/glmaths.d.ts"
     }
   },

@@ -77,9 +77,9 @@ const b = a.plus(5)
 
 `glmaths` supports also `float64`, `int32`, `uint32` variants:
 
-- **`Float64Array`**: `vec2d`, `vec3d`, `vec4d`, `quatd`, `quat2d`, `mat2d`, `mat3d`, `mat4d`
-- **`Int32Array`**: `vec2i`, `vec3i`, `vec4i`
-- **`Uint32Array`**: `vec2u`, `vec3u`, `vec4u`
+- **`Float64Array`**: `vec2d`/`dvec2`, `vec3d`/`dvec3`, `vec4d`/`dvec4`, `quatd`/`dquat`, `quat2d`/`dquat2`, `mat2d`/`mat2x2d`/`dmat2`/`dmat2x2`, `mat3d`/`mat3x3d`/`dmat3`/`dmat3x3`, `mat4d`/`mat4x4d`/`dmat4`/`dmat4x4`
+- **`Int32Array`**: `vec2i`/`ivec2`, `vec3i`/`ivec3`, `vec4i`/`ivec4`
+- **`Uint32Array`**: `vec2u`/`uvec2`, `vec3u`/`uvec3`, `vec4u`/`uvec4`
 
 
 ## Docs

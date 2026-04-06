@@ -13085,17 +13085,29 @@ declare const mat4: ((...args: (number | TypedArray)[]) => Mat4) & typeof Mat4 &
 declare const mat4x4: ((...args: (number | TypedArray)[]) => Mat4) & typeof Mat4 & Omit<never, "prototype" | "new">;
 
 declare const vec2d: ((...args: (number | TypedArray)[]) => Vec2d) & typeof Vec2d & Omit<Vec2, "prototype" | "new">;
+declare const dvec2: ((...args: (number | TypedArray)[]) => Vec2d) & typeof Vec2d & Omit<Vec2, "prototype" | "new">;
 declare const vec3d: ((...args: (number | TypedArray)[]) => Vec3d) & typeof Vec3d & Omit<Vec3, "prototype" | "new">;
+declare const dvec3: ((...args: (number | TypedArray)[]) => Vec3d) & typeof Vec3d & Omit<Vec3, "prototype" | "new">;
 declare const vec4d: ((...args: (number | TypedArray)[]) => Vec4d) & typeof Vec4d & Omit<Vec4, "prototype" | "new">;
+declare const dvec4: ((...args: (number | TypedArray)[]) => Vec4d) & typeof Vec4d & Omit<Vec4, "prototype" | "new">;
 declare const quatd: ((...args: (number | TypedArray)[]) => Quatd) & typeof Quatd & Omit<Quat, "prototype" | "new">;
+declare const dquat: ((...args: (number | TypedArray)[]) => Quatd) & typeof Quatd & Omit<Quat, "prototype" | "new">;
 declare const quat2d: ((...args: (number | TypedArray)[]) => Quat2d) & typeof Quat2d & Omit<Quat2, "prototype" | "new">;
+declare const dquat2: ((...args: (number | TypedArray)[]) => Quat2d) & typeof Quat2d & Omit<Quat2, "prototype" | "new">;
 declare const mat2d: ((...args: (number | TypedArray)[]) => Mat2d) & typeof Mat2d & Omit<Mat2, "prototype" | "new">;
 declare const mat2x2d: ((...args: (number | TypedArray)[]) => Mat2d) & typeof Mat2d & Omit<Mat2, "prototype" | "new">;
+declare const dmat2: ((...args: (number | TypedArray)[]) => Mat2d) & typeof Mat2d & Omit<Mat2, "prototype" | "new">;
+declare const dmat2x2: ((...args: (number | TypedArray)[]) => Mat2d) & typeof Mat2d & Omit<Mat2, "prototype" | "new">;
 declare const mat2x3d: ((...args: (number | TypedArray)[]) => Mat2x3d) & typeof Mat2x3d & Omit<Mat2x3, "prototype" | "new">;
+declare const dmat2x3: ((...args: (number | TypedArray)[]) => Mat2x3d) & typeof Mat2x3d & Omit<Mat2x3, "prototype" | "new">;
 declare const mat3d: ((...args: (number | TypedArray)[]) => Mat3d) & typeof Mat3d & Omit<Mat3, "prototype" | "new">;
 declare const mat3x3d: ((...args: (number | TypedArray)[]) => Mat3d) & typeof Mat3d & Omit<Mat3, "prototype" | "new">;
+declare const dmat3: ((...args: (number | TypedArray)[]) => Mat3d) & typeof Mat3d & Omit<Mat3, "prototype" | "new">;
+declare const dmat3x3: ((...args: (number | TypedArray)[]) => Mat3d) & typeof Mat3d & Omit<Mat3, "prototype" | "new">;
 declare const mat4d: ((...args: (number | TypedArray)[]) => Mat4d) & typeof Mat4d & Omit<Mat4, "prototype" | "new">;
 declare const mat4x4d: ((...args: (number | TypedArray)[]) => Mat4d) & typeof Mat4d & Omit<Mat4, "prototype" | "new">;
+declare const dmat4: ((...args: (number | TypedArray)[]) => Mat4d) & typeof Mat4d & Omit<Mat4, "prototype" | "new">;
+declare const dmat4x4: ((...args: (number | TypedArray)[]) => Mat4d) & typeof Mat4d & Omit<Mat4, "prototype" | "new">;
 
 declare const vec2i: ((...args: (number | TypedArray)[]) => Vec2i) & typeof Vec2i & Omit<Vec2, "prototype" | "new">;
 declare const ivec2: ((...args: (number | TypedArray)[]) => Vec2i) & typeof Vec2i & Omit<Vec2, "prototype" | "new">;
@@ -13118,5 +13130,5 @@ declare const _default: {
     LEFT_HANDED: boolean;
 };
 
-export { Mat2, Mat2d, Mat2x3, Mat2x3d, Mat3, Mat3d, Mat4, Mat4d, Quat, Quat2, Quat2d, Quatd, Vec2, Vec2d, Vec2i, Vec2u, Vec3, Vec3d, Vec3i, Vec3u, Vec4, Vec4d, Vec4i, Vec4u, abs, clamp, clamp01, _default as default, deg, degrees, fract, ivec2, ivec3, ivec4, lerp, mat2, mat2d, mat2x2, mat2x2d, mat2x3, mat2x3d, mat3, mat3d, mat3x3, mat3x3d, mat4, mat4d, mat4x4, mat4x4d, mix, quat, quat2, quat2d, quatd, rad, radians, round, saturate, sign, smoothstep, step, toDegrees, toRadians, uvec2, uvec3, uvec4, vec2, vec2d, vec2i, vec2u, vec3, vec3d, vec3i, vec3u, vec4, vec4d, vec4i, vec4u };
+export { Mat2d as DMat2, Mat2d as DMat2x2, Mat2x3d as DMat2x3, Mat3d as DMat3, Mat3d as DMat3x3, Mat4d as DMat4, Mat4d as DMat4x4, Quatd as DQuat, Quat2d as DQuat2, Vec2d as DVec2, Vec3d as DVec3, Vec4d as DVec4, Vec2i as IVec2, Vec3i as IVec3, Vec4i as IVec4, Mat2, Mat2d, Mat2 as Mat2x2, Mat2x3, Mat2x3d, Mat3, Mat3d, Mat3 as Mat3x3, Mat4, Mat4d, Mat4 as Mat4x4, Quat, Quat2, Quat2d, Quatd, Vec2u as UVec2, Vec3u as UVec3, Vec4u as UVec4, Vec2, Vec2d, Vec2i, Vec2u, Vec3, Vec3d, Vec3i, Vec3u, Vec4, Vec4d, Vec4i, Vec4u, abs, clamp, clamp01, _default as default, deg, degrees, dmat2, dmat2x2, dmat2x3, dmat3, dmat3x3, dmat4, dmat4x4, dquat, dquat2, dvec2, dvec3, dvec4, fract, ivec2, ivec3, ivec4, lerp, mat2, mat2d, mat2x2, mat2x2d, mat2x3, mat2x3d, mat3, mat3d, mat3x3, mat3x3d, mat4, mat4d, mat4x4, mat4x4d, mix, quat, quat2, quat2d, quatd, rad, radians, round, saturate, sign, smoothstep, step, toDegrees, toRadians, uvec2, uvec3, uvec4, vec2, vec2d, vec2i, vec2u, vec3, vec3d, vec3i, vec3u, vec4, vec4d, vec4i, vec4u };
 export type { GenType, Mat, Vec, Vector };

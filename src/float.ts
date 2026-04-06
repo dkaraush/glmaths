@@ -68,4 +68,17 @@ Mat4.prototype.quat = Quat
 export const mat4 = create(Mat4, 16)
 export const mat4x4 = mat4
 
-export { Vec2, Vec3, Vec4, Quat, Quat2, Mat2, Mat2x3, Mat3, Mat4 }
+export {
+    Vec2,
+    Vec3,
+    Vec4,
+    Quat,
+    Quat2,
+    Mat2,
+    Mat2 as Mat2x2,
+    Mat2x3,
+    Mat3,
+    Mat3 as Mat3x3,
+    Mat4,
+    Mat4 as Mat4x4,
+}
