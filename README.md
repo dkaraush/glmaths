@@ -581,7 +581,7 @@ This benchmark, though, doesn't tell the difference in loading up a library. Whe
 
 Benchmark is run with `glmaths.ALWAYS_COPY = false`.
 
-| Operation | gl-matrix | glm | Diff |
+| Operation | gl-matrix | glmaths | Diff |
 |:---|---:|---:|---:|
 | Vec3 creation | 42.8M ops/s ±1.1% | 41.5M ops/s ±0.7% | -3% |
 | Vec3 add | 139.5M ops/s ±1.9% | 202.6M ops/s ±3.2% | **+45%** |

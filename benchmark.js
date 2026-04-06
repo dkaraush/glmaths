@@ -34,7 +34,7 @@ function runSuite(suite) {
 
         const benchmarks = Array.from(this)
         const glmEntry = benchmarks.find(b => b.name.startsWith('gl-matrix'))
-        const glmathsEntry = benchmarks.find(b => b.name.startsWith('glm'))
+        const glmathsEntry = benchmarks.find(b => b.name.startsWith('glmaths'))
 
         if (glmEntry || glmathsEntry) {
           const row = { name: this.name }
@@ -74,7 +74,7 @@ function runSuite(suite) {
 function printMarkdownTable() {
   console.log('\n')
   console.log('## Benchmark Results\n')
-  console.log('| Operation | gl-matrix | glm | Diff |')
+  console.log('| Operation | gl-matrix | glmaths | Diff |')
   console.log('|:---|---:|---:|---:|')
 
   for (const r of allResults) {
