@@ -86,7 +86,7 @@ const b = a.plus(5)
 
 - **EPSILON** = `0.000001` — used in `a.equals(b)` functions
 - **RANDOM** = `Math.random` — used in `.random()` functions
-- **ANGLE_ORDER** = `'zyx'` — used in [`Quat.fromEuler`](https://github.com/dkaraush/glmaths/blob/main/src/quat.ts#L482)
+- **ANGLE_ORDER** = `'zyx'` — used in [`Quat.fromEuler`](https://github.com/dkaraush/glmaths/blob/main/src/quat.ts#L562)
 - **[ALWAYS_COPY](#out-argument)** = `false`
 - **LEFT_HANDED** = `false` — set to true for left handed geometry, used in `mat4`
 
