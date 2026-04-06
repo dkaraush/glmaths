@@ -1,6 +1,6 @@
 {
   "name": "glmaths",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "scripts": {
     "build": "rollup -c",
     "test": "TS_NODE_PROJECT=tsconfig.test.json node --require ts-node/register --test tests/*.test.ts",
