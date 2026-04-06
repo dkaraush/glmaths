@@ -1,6 +1,6 @@
 {
   "name": "glmaths",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "build": "rollup -c",
     "test": "TS_NODE_PROJECT=tsconfig.test.json node --require ts-node/register --test tests/*.test.ts",
@@ -19,6 +19,11 @@
       "require": "./dist/cjs/glmaths.min.js",
       "types": "./dist/glmaths.d.ts"
     }
+  },
+  "homepage": "https://github.com/dkaraush/glmaths#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dkaraush/glmaths.git"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^1.0.0",
