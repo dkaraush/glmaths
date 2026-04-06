@@ -3,7 +3,10 @@ import { readFileSync, writeFileSync } from 'fs'
 
 const repo_link = 'https://github.com/dkaraush/glmaths/blob/main/src/'
 
-const project = new Project({ tsConfigFilePath: 'tsconfig.json' })
+const project = new Project()
+project.addSourceFilesAtPaths([
+  "src/*.ts"
+]);
 
 const classes = project.getSourceFiles().map(file => file.getClasses().filter(c => c.getName().length > 0)).flat()
 const types = classes.map(clazz => clazz.getName().toLowerCase())
