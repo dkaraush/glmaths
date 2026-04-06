@@ -1,8 +1,10 @@
 import glmaths from '.'
 import { equals } from './internalUtils'
-import { Vec3 } from './vec3'
-import { Quat } from './quat'
-import { Mat4 } from './mat4'
+import { Vec3, Vec3d, Vec3Like } from './vec3'
+import { Quat, QuatLike, Quatd } from './quat'
+import { Mat4, Mat4d, Mat4Like } from './mat4'
+
+export type Quat2Like = Quat2 | Quat2d
 
 /**
  * Dual Quaternion for rigid body transformations (rotation + translation)
@@ -11,9 +13,9 @@ import { Mat4 } from './mat4'
  */
 export class Quat2 extends Float32Array {
 
-  static get identity() { return quat2(0, 0, 0, 1, 0, 0, 0, 0) }
-  static get Identity() { return quat2(0, 0, 0, 1, 0, 0, 0, 0) }
-  static get IDENTITY() { return quat2(0, 0, 0, 1, 0, 0, 0, 0) }
+  static get identity() { return new this.prototype.quat2(0, 0, 0, 1, 0, 0, 0, 0) }
+  static get Identity() { return new this.prototype.quat2(0, 0, 0, 1, 0, 0, 0, 0) }
+  static get IDENTITY() { return new this.prototype.quat2(0, 0, 0, 1, 0, 0, 0, 0) }
 
   /**
    * Creates a new dual quaternion
@@ -39,7 +41,9 @@ export class Quat2 extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  getReal(out = new Quat()): Quat {
+  getReal<Out extends QuatLike = Quat>(
+    out: Out = new this.quat() as Out
+  ) {
     out[0] = this[0]; out[1] = this[1]; out[2] = this[2]; out[3] = this[3]
     return out
   }
@@ -50,7 +54,9 @@ export class Quat2 extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  getDual(out = new Quat()): Quat {
+  getDual<Out extends QuatLike = Quat>(
+    out: Out = new this.quat() as Out
+  ) {
     out[0] = this[4]; out[1] = this[5]; out[2] = this[6]; out[3] = this[7]
     return out
   }
@@ -58,10 +64,10 @@ export class Quat2 extends Float32Array {
   /**
    * Set the real part from a quaternion
    *
-   * @param {Quat} q the source quaternion
+   * @param {QuatLike} q the source quaternion
    * @returns {Quat2} this
    */
-  setReal(q: Quat) {
+  setReal(q: QuatLike) {
     this[0] = q[0]; this[1] = q[1]; this[2] = q[2]; this[3] = q[3]
     return this
   }
@@ -69,10 +75,10 @@ export class Quat2 extends Float32Array {
   /**
    * Set the dual part from a quaternion
    *
-   * @param {Quat} q the source quaternion
+   * @param {QuatLike} q the source quaternion
    * @returns {Quat2} this
    */
-  setDual(q: Quat) {
+  setDual(q: QuatLike) {
     this[4] = q[0]; this[5] = q[1]; this[6] = q[2]; this[7] = q[3]
     return this
   }
@@ -83,7 +89,9 @@ export class Quat2 extends Float32Array {
    * @param {Vec3} out the receiving vector, defaults to vec3()
    * @returns {Vec3} out
    */
-  getTranslation(out = new Vec3()): Vec3 {
+  getTranslation<Out extends Vec3Like = Vec3>(
+    out: Out = new this.vec3() as Out
+  ) {
     const ax = this[4], ay = this[5], az = this[6], aw = this[7]
     const bx = -this[0], by = -this[1], bz = -this[2], bw = this[3]
     out[0] = (ax * bw + aw * bx + ay * bz - az * by) * 2
@@ -95,12 +103,16 @@ export class Quat2 extends Float32Array {
   /**
    * Create from rotation quaternion and translation vector
    *
-   * @param {Quat} q the rotation quaternion
-   * @param {Vec3} t the translation vector
+   * @param {QuatLike} q the rotation quaternion
+   * @param {Vec3Like} t the translation vector
    * @param {Quat2} out the receiving dual quaternion, defaults to quat2()
    * @returns {Quat2} out
    */
-  static fromRotationTranslation(q: Quat, t: Vec3, out = quat2()): Quat2 {
+  static fromRotationTranslation<Out extends Quat2Like = Quat2>(
+    q: QuatLike,
+    t: Vec3Like,
+    out: Out = new this.prototype.quat2() as Out
+  ) {
     const ax = t[0] * 0.5, ay = t[1] * 0.5, az = t[2] * 0.5
     const bx = q[0], by = q[1], bz = q[2], bw = q[3]
     out[0] = bx; out[1] = by; out[2] = bz; out[3] = bw
@@ -114,11 +126,14 @@ export class Quat2 extends Float32Array {
   /**
    * Create from translation only
    *
-   * @param {Vec3} t the translation vector
+   * @param {Vec3Like} t the translation vector
    * @param {Quat2} out the receiving dual quaternion, defaults to quat2()
    * @returns {Quat2} out
    */
-  static fromTranslation(t: Vec3, out = quat2()): Quat2 {
+  static fromTranslation<Out extends Quat2Like = Quat2>(
+    t: Vec3Like,
+    out: Out = new this.prototype.quat2() as Out
+  ) {
     out[0] = 0; out[1] = 0; out[2] = 0; out[3] = 1
     out[4] = t[0] * 0.5; out[5] = t[1] * 0.5; out[6] = t[2] * 0.5; out[7] = 0
     return out
@@ -127,11 +142,14 @@ export class Quat2 extends Float32Array {
   /**
    * Create from rotation only
    *
-   * @param {Quat} q the rotation quaternion
+   * @param {QuatLike} q the rotation quaternion
    * @param {Quat2} out the receiving dual quaternion, defaults to quat2()
    * @returns {Quat2} out
    */
-  static fromRotation(q: Quat, out = quat2()): Quat2 {
+  static fromRotation<Out extends Quat2Like = Quat2>(
+    q: QuatLike,
+    out: Out = new this.prototype.quat2() as Out
+  ) {
     out[0] = q[0]; out[1] = q[1]; out[2] = q[2]; out[3] = q[3]
     out[4] = 0; out[5] = 0; out[6] = 0; out[7] = 0
     return out
@@ -144,7 +162,10 @@ export class Quat2 extends Float32Array {
    * @param {Quat2} out the receiving dual quaternion, defaults to quat2()
    * @returns {Quat2} out
    */
-  static fromMat4(m: Mat4, out = quat2()): Quat2 {
+  static fromMat4<Out extends Quat2Like = Quat2>(
+    m: Mat4Like,
+    out: Out = new this.prototype.quat2() as Out
+  ) {
     const r = m.getRotation()
     const t = m.getTranslation()
     return Quat2.fromRotationTranslation(r, t, out)
@@ -156,18 +177,20 @@ export class Quat2 extends Float32Array {
    * @returns {Quat2} a new dual quaternion
    */
   clone() {
-    return quat2(this[0], this[1], this[2], this[3], this[4], this[5], this[6], this[7])
+    return new this.quat2(this[0], this[1], this[2], this[3], this[4], this[5], this[6], this[7])
   }
 
   /**
    * Multiply two dual quaternions
    *
-   * @param {Quat2} b the second operand
+   * @param {Quat2Like} b the second operand
    * @param {Quat2} out the receiving dual quaternion, defaults to new quat2()
    * @returns {Quat2} out
    */
-  // @ts-ignore
-  multiply = (b: Quat2, out = glmaths.ALWAYS_COPY ? quat2() : this): Quat2 => {
+  multiply<Out extends Quat2Like = Quat2>(
+    b: Quat2Like,
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat2() : this) as Out
+  ) {
     const ax0 = this[0], ay0 = this[1], az0 = this[2], aw0 = this[3]
     const bx1 = b[4], by1 = b[5], bz1 = b[6], bw1 = b[7]
     const ax1 = this[4], ay1 = this[5], az1 = this[6], aw1 = this[7]
@@ -192,11 +215,14 @@ export class Quat2 extends Float32Array {
   /**
    * Translate by a Vec3
    *
-   * @param {Vec3} v the translation vector
+   * @param {Vec3Like} v the translation vector
    * @param {Quat2} out the receiving dual quaternion, defaults to new quat2()
    * @returns {Quat2} out
    */
-  translate(v: Vec3, out = glmaths.ALWAYS_COPY ? quat2() : this): Quat2 {
+  translate<Out extends Quat2Like = Quat2>(
+    v: Vec3Like,
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat2() : this) as Out
+  ) {
     const ax1 = this[0], ay1 = this[1], az1 = this[2], aw1 = this[3]
     const bx1 = v[0] * 0.5, by1 = v[1] * 0.5, bz1 = v[2] * 0.5
     const ax2 = this[4], ay2 = this[5], az2 = this[6], aw2 = this[7]
@@ -214,7 +240,9 @@ export class Quat2 extends Float32Array {
    * @param {Quat2} out the receiving dual quaternion, defaults to new quat2()
    * @returns {Quat2} out
    */
-  conjugate(out = glmaths.ALWAYS_COPY ? quat2() : this): Quat2 {
+  conjugate<Out extends Quat2Like = Quat2>(
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat2() : this) as Out
+  ) {
     out[0] = -this[0]; out[1] = -this[1]; out[2] = -this[2]; out[3] = this[3]
     out[4] = -this[4]; out[5] = -this[5]; out[6] = -this[6]; out[7] = this[7]
     return out
@@ -226,7 +254,9 @@ export class Quat2 extends Float32Array {
    * @param {Quat2} out the receiving dual quaternion, defaults to new quat2()
    * @returns {Quat2} out
    */
-  invert(out = glmaths.ALWAYS_COPY ? quat2() : this): Quat2 {
+  invert<Out extends Quat2Like = Quat2>(
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat2() : this) as Out
+  ) {
     const sqlen = this.squaredLength()
     out[0] = -this[0] / sqlen; out[1] = -this[1] / sqlen
     out[2] = -this[2] / sqlen; out[3] = this[3] / sqlen
@@ -257,11 +287,14 @@ export class Quat2 extends Float32Array {
   /**
    * Normalize the dual quaternion
    *
-   * @param {Quat2} q the quaternion to normalize
+   * @param {Quat2Like} q the quaternion to normalize
    * @param {Quat2} out the receiving dual quaternion, defaults to new quat2()
    * @returns {Quat2} out
    */
-  static normalize(q: Quat2, out = quat2()) {
+  static normalize<Out extends Quat2Like = Quat2>(
+    q: Quat2Like,
+    out: Out = new this.prototype.quat2() as Out
+  ) {
     let magnitude = q.squaredLength()
     if (magnitude > 0) {
       magnitude = Math.sqrt(magnitude)
@@ -284,31 +317,38 @@ export class Quat2 extends Float32Array {
    * @param {Quat2} out the receiving dual quaternion, defaults to new quat2()
    * @returns {Quat2} out
    */
-  normalize(out = glmaths.ALWAYS_COPY ? quat2() : this): Quat2 {
+  normalize<Out extends Quat2Like = Quat2>(
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat2() : this) as Out
+  ) {
     return Quat2.normalize(this, out)
   }
 
   /**
    * Dot product of the real parts of two dual quaternions
    *
-   * @param {Quat2} a the first operand
-   * @param {Quat2} b the second operand
+   * @param {Quat2Like} a the first operand
+   * @param {Quat2Like} b the second operand
    * @returns {Number} dot product
    */
-  static dot(a: Quat2, b: Quat2) {
+  static dot(a: Quat2Like, b: Quat2Like) {
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]
   }
 
   /**
    * Performs a linear interpolation between two dual quaternions
    *
-   * @param {Quat2} a the first operand
-   * @param {Quat2} b the second operand
+   * @param {Quat2Like} a the first operand
+   * @param {Quat2Like} b the second operand
    * @param {Number} t interpolation amount, in the range [0-1]
    * @param {Quat2} out the receiving dual quaternion, defaults to quat2()
    * @returns {Quat2} out
    */
-  static lerp(a: Quat2, b: Quat2, t: number, out = quat2()): Quat2 {
+  static lerp<Out extends Quat2Like = Quat2>(
+    a: Quat2Like,
+    b: Quat2Like,
+    t: number,
+    out: Out = new this.prototype.quat2() as Out
+  ) {
     const mt = 1 - t
     if (Quat2.dot(a, b) < 0) t = -t
     out[0] = a[0] * mt + b[0] * t
@@ -325,11 +365,14 @@ export class Quat2 extends Float32Array {
   /**
    * Adds two dual quaternions
    *
-   * @param {Quat2} b the second operand
+   * @param {Quat2Like} b the second operand
    * @param {Quat2} out the receiving dual quaternion, defaults to new quat2()
    * @returns {Quat2} out
    */
-  plus(b: Quat2, out = glmaths.ALWAYS_COPY ? quat2() : this): Quat2 {
+  plus<Out extends Quat2Like = Quat2>(
+    b: Quat2Like,
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat2() : this) as Out
+  ) {
     out[0] = this[0] + b[0]; out[1] = this[1] + b[1]
     out[2] = this[2] + b[2]; out[3] = this[3] + b[3]
     out[4] = this[4] + b[4]; out[5] = this[5] + b[5]
@@ -344,7 +387,10 @@ export class Quat2 extends Float32Array {
    * @param {Quat2} out the receiving dual quaternion, defaults to new quat2()
    * @returns {Quat2} out
    */
-  scale(s: number, out = glmaths.ALWAYS_COPY ? quat2() : this): Quat2 {
+  scale<Out extends Quat2Like = Quat2>(
+    s: number,
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat2() : this) as Out
+  ) {
     out[0] = this[0] * s; out[1] = this[1] * s
     out[2] = this[2] * s; out[3] = this[3] * s
     out[4] = this[4] * s; out[5] = this[5] * s
@@ -355,10 +401,10 @@ export class Quat2 extends Float32Array {
   /**
    * Returns whether two dual quaternions are approximately equal
    *
-   * @param {Quat2} b the second operand
+   * @param {Quat2Like} b the second operand
    * @returns {Boolean} true if the dual quaternions are approximately equal
    */
-  equals(b: Quat2) {
+  equals(b: Quat2Like) {
     return (
       equals(this[0], b[0]) && equals(this[1], b[1]) &&
       equals(this[2], b[2]) && equals(this[3], b[3]) &&
@@ -370,10 +416,10 @@ export class Quat2 extends Float32Array {
   /**
    * Returns whether two dual quaternions are exactly equal
    *
-   * @param {Quat2} b the second operand
+   * @param {Quat2Like} b the second operand
    * @returns {Boolean} true if the dual quaternions are exactly equal
    */
-  exactEquals(b: Quat2) {
+  exactEquals(b: Quat2Like) {
     return (
       this[0] === b[0] && this[1] === b[1] && this[2] === b[2] && this[3] === b[3] &&
       this[4] === b[4] && this[5] === b[5] && this[6] === b[6] && this[7] === b[7]
@@ -403,14 +449,41 @@ export class Quat2 extends Float32Array {
     }
     const real = qStr(this[3], this[0], this[1], this[2])
     const dual = qStr(this[7], this[4], this[5], this[6])
-    return `(${real}) + \u03B5(${dual})`
+    return `${this.$str}((${real}) + \u03B5(${dual}))`
   }
 }
-export interface Quat2 {
+
+interface Quat2Impl<ThisQuat2 extends Quat2Like, ThisQuat extends QuatLike = Quat, ThisVec3 extends Vec3Like = Vec3> {
+  getReal<Out extends QuatLike = ThisQuat>(out?: Out): Out
+  getDual<Out extends QuatLike = ThisQuat>(out?: Out): Out
+  setReal(q: QuatLike): ThisQuat2
+  setDual(q: QuatLike): ThisQuat2
+  getTranslation<Out extends Vec3Like = ThisVec3>(out?: Out): Out
+  clone(): ThisQuat2
+  multiply<Out extends Quat2Like = ThisQuat2>(b: Quat2Like, out?: Out): Out
+  translate<Out extends Quat2Like = ThisQuat2>(v: Vec3Like, out?: Out): Out
+  conjugate<Out extends Quat2Like = ThisQuat2>(out?: Out): Out
+  invert<Out extends Quat2Like = ThisQuat2>(out?: Out): Out
+  squaredLength(): number
+  len(): number
+  normalize<Out extends Quat2Like = ThisQuat2>(out?: Out): Out
+  plus<Out extends Quat2Like = ThisQuat2>(b: Quat2Like, out?: Out): Out
+  scale<Out extends Quat2Like = ThisQuat2>(s: number, out?: Out): Out
+  equals(b: Quat2Like): boolean
+  exactEquals(b: Quat2Like): boolean
+  toString(): string
+
   sqrLen: () => number
   str: () => string
-  add: (b: Quat2, out?: Quat2) => Quat2
-  normalized: (out?: Quat2) => Quat2
+  add<Out extends Quat2Like = ThisQuat2>(b: Quat2Like, out?: Out): Out
+  normalized<Out extends Quat2Like = ThisQuat2>(out?: Out): Out
+}
+
+export interface Quat2 extends Quat2Impl<Quat2, Quat, Vec3> {
+  $str: string
+  quat: typeof Quat
+  quat2: typeof Quat2
+  vec3: typeof Vec3
 }
 
 // @aliases
@@ -419,8 +492,46 @@ Quat2.prototype.normalized = Quat2.prototype.normalize
 Quat2.prototype.str = Quat2.prototype.toString
 Quat2.prototype.add = Quat2.prototype.plus
 
-const createQuat2 = 
-  (x1 = 0, y1 = 0, z1 = 0, w1 = 1, x2 = 0, y2 = 0, z2 = 0, w2 = 0) =>
-    new Quat2(x1, y1, z1, w1, x2, y2, z2, w2)
-Object.setPrototypeOf(createQuat2, Quat2)
-export const quat2 = createQuat2 as typeof createQuat2 & typeof Quat2
+/**
+ * Dual Quaternion for rigid body transformations (rotation + translation), stored with 64 bit floats
+ * Stored as [real.x, real.y, real.z, real.w, dual.x, dual.y, dual.z, dual.w]
+ * @extends Float64Array
+ */
+export class Quat2d extends Float64Array {
+
+  static get identity() { return new Quat2d(0, 0, 0, 1, 0, 0, 0, 0) }
+  static get Identity() { return new Quat2d(0, 0, 0, 1, 0, 0, 0, 0) }
+  static get IDENTITY() { return new Quat2d(0, 0, 0, 1, 0, 0, 0, 0) }
+
+  /**
+   * Creates a new dual quaternion
+   *
+   * @param {Number} x1 real X component, defaults to 0
+   * @param {Number} y1 real Y component, defaults to 0
+   * @param {Number} z1 real Z component, defaults to 0
+   * @param {Number} w1 real W component, defaults to 1
+   * @param {Number} x2 dual X component, defaults to 0
+   * @param {Number} y2 dual Y component, defaults to 0
+   * @param {Number} z2 dual Z component, defaults to 0
+   * @param {Number} w2 dual W component, defaults to 0
+   */
+  constructor(x1 = 0, y1 = 0, z1 = 0, w1 = 1, x2 = 0, y2 = 0, z2 = 0, w2 = 0) {
+    super(8)
+    this[0] = x1; this[1] = y1; this[2] = z1; this[3] = w1
+    this[4] = x2; this[5] = y2; this[6] = z2; this[7] = w2
+  }
+
+  static fromRotationTranslation: <Out extends Quat2Like = Quat2d>(q: QuatLike, t: Vec3Like, out?: Out) => Out
+  static fromTranslation: <Out extends Quat2Like = Quat2d>(t: Vec3Like, out?: Out) => Out
+  static fromRotation: <Out extends Quat2Like = Quat2d>(q: QuatLike, out?: Out) => Out
+  static fromMat4: <Out extends Quat2Like = Quat2d>(m: Mat4Like, out?: Out) => Out
+  static normalize: <Out extends Quat2Like = Quat2d>(q: Quat2Like, out?: Out) => Out
+  static dot: (a: Quat2Like, b: Quat2Like) => number
+  static lerp: <Out extends Quat2Like = Quat2d>(a: Quat2Like, b: Quat2Like, t: number, out?: Out) => Out
+}
+export interface Quat2d extends Quat2Impl<Quat2d, Quatd, Vec3d> {
+  $str: string
+  quat: typeof Quatd
+  quat2: typeof Quat2d
+  vec3: typeof Vec3d
+}

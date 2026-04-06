@@ -541,8 +541,8 @@ describe('Vec2', () => {
       const c = a + b
       assert.strictEqual(c.x, 2)
       assert.strictEqual(c.y, 4)
-      let d = vec2(4, 5)
-      d += vec2(8, 8)
+      let d = new Vec2(4, 5)
+      d += new Vec2(8, 8)
       assert.strictEqual(d.x, 12)
       assert.strictEqual(d.y, 13)
     })

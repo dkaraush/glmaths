@@ -1,19 +1,21 @@
 import glmaths from '.'
-import { equals } from './internalUtils'
-import { Vec2 } from './vec2'
-import { Vec3 } from './vec3'
-import { Quat } from './quat'
-import { Vec4 } from './vec4'
+import { create, equals } from './internalUtils'
+import { Vec2, Vec2d, Vec2Like, isVec2Like } from './vec2'
+import { Vec3, Vec3d, Vec3Like, isVec3Like } from './vec3'
+import { Vec4, Vec4d, Vec4Like, isVec4Like } from './vec4'
+import { Quat, Quatd, QuatLike } from './quat'
+
+export type Mat4Like = Mat4 | Mat4d
 
 /**
- * 4x4 Matrix in column-major order
+ * 4x4 Matrix in column-major order, stored as 32-bit floats
  * @extends Float32Array
  */
 export class Mat4 extends Float32Array {
 
-  static get identity() { return mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
-  static get Identity() { return mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
-  static get IDENTITY() { return mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
+  static get identity() { return new this.prototype.mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
+  static get Identity() { return new this.prototype.mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
+  static get IDENTITY() { return new this.prototype.mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
 
   /**
    * Creates a new 4x4 matrix
@@ -66,7 +68,7 @@ export class Mat4 extends Float32Array {
    * @returns {Mat4} a new 4x4 matrix
    */
   clone() {
-    return mat4(
+    return new this.mat4(
       this[0], this[1], this[2], this[3],
       this[4], this[5], this[6], this[7],
       this[8], this[9], this[10], this[11],
@@ -80,8 +82,8 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  transpose(out = glmaths.ALWAYS_COPY ? mat4() : this) {
-    if (out === this) {
+  transpose<Out extends Mat4Like = Mat4>(out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
+    if (out === (this as any)) {
       const a01 = this[1], a02 = this[2], a03 = this[3]
       const a12 = this[6], a13 = this[7], a23 = this[11]
       out[1] = this[4]
@@ -111,7 +113,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  invert(out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  invert<Out extends Mat4Like = Mat4>(out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     const a00 = this[0], a01 = this[1], a02 = this[2], a03 = this[3]
     const a10 = this[4], a11 = this[5], a12 = this[6], a13 = this[7]
     const a20 = this[8], a21 = this[9], a22 = this[10], a23 = this[11]
@@ -159,7 +161,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  adjoint(out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  adjoint<Out extends Mat4Like = Mat4>(out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     const a00 = this[0], a01 = this[1], a02 = this[2], a03 = this[3]
     const a10 = this[4], a11 = this[5], a12 = this[6], a13 = this[7]
     const a20 = this[8], a21 = this[9], a22 = this[10], a23 = this[11]
@@ -220,21 +222,26 @@ export class Mat4 extends Float32Array {
   /**
    * Multiplies with another matrix, or transforms a vector
    *
-   * @param {Vec2 | Vec3 | Vec4 | Mat4} b the second operand
+   * @param {Vec2 | Vec3 | Vec4 | Mat4Like} b the second operand
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  multiply(b: Vec2): Vec2
-  multiply(b: Vec3): Vec3
-  multiply(b: Vec4): Vec4
-  multiply(b: Mat4, out?: Mat4): Mat4
-  multiply(b: Mat4 | Vec2 | Vec3 | Vec4, out = glmaths.ALWAYS_COPY ? mat4() : this) {
-    if (b instanceof Vec2)
-      return b.transformMat4(this)
-    if (b instanceof Vec3)
-      return b.transformMat4(this)
-    if (b instanceof Vec4)
-      return b.transformMat4(this)
+
+  multiply<Out extends Vec2Like = Vec2>(b: Vec2Like, out?: Out): Out
+  multiply<Out extends Vec3Like = Vec3>(b: Vec3Like, out?: Out): Out
+  multiply<Out extends Vec4Like = Vec4>(b: Vec4Like, out?: Out): Out
+  multiply<Out extends Mat4Like = Mat4>(b: Mat4Like, out?: Out): Out
+  multiply(
+    b: Mat4Like | Vec2Like | Vec3Like | Vec4Like,
+    out?: Mat4Like | Vec2Like | Vec3Like | Vec4Like
+  ) {
+    if (isVec2Like(b))
+      return b.transformMat4(this, out as Vec2Like ?? new this.vec2())
+    if (isVec3Like(b))
+      return b.transformMat4(this, out as Vec3Like ?? new this.vec3())
+    if (isVec4Like(b))
+      return b.transformMat4(this, out as Vec4Like ?? new this.vec4())
+    out ??= glmaths.ALWAYS_COPY ? new this.mat4() : this
 
     const a00 = this[0], a01 = this[1], a02 = this[2], a03 = this[3]
     const a10 = this[4], a11 = this[5], a12 = this[6], a13 = this[7]
@@ -274,9 +281,9 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  translate(v: Vec3, out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  translate<Out extends Mat4Like = Mat4>(v: Vec3Like, out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     const x = v[0], y = v[1], z = v[2]
-    if (out === this) {
+    if (out === (this as any)) {
       out[12] = this[0] * x + this[4] * y + this[8] * z + this[12]
       out[13] = this[1] * x + this[5] * y + this[9] * z + this[13]
       out[14] = this[2] * x + this[6] * y + this[10] * z + this[14]
@@ -303,7 +310,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  scale(v: Vec3, out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  scale<Out extends Mat4Like = Mat4>(v: Vec3Like, out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     const x = v[0], y = v[1], z = v[2]
     out[0] = this[0] * x; out[1] = this[1] * x; out[2] = this[2] * x; out[3] = this[3] * x
     out[4] = this[4] * y; out[5] = this[5] * y; out[6] = this[6] * y; out[7] = this[7] * y
@@ -320,7 +327,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  rotate(rad: number, axis: Vec3, out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  rotate<Out extends Mat4Like = Mat4>(rad: number, axis: Vec3Like, out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     let x = axis[0], y = axis[1], z = axis[2]
     let len = Math.sqrt(x * x + y * y + z * z)
     if (len < glmaths.EPSILON) return null
@@ -359,7 +366,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  rotateX(rad: number, out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  rotateX<Out extends Mat4Like = Mat4>(rad: number, out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     const s = Math.sin(rad), c = Math.cos(rad)
     const a10 = this[4], a11 = this[5], a12 = this[6], a13 = this[7]
     const a20 = this[8], a21 = this[9], a22 = this[10], a23 = this[11]
@@ -369,7 +376,7 @@ export class Mat4 extends Float32Array {
     out[8] = a20 * c - a10 * s; out[9] = a21 * c - a11 * s
     out[10] = a22 * c - a12 * s; out[11] = a23 * c - a13 * s
 
-    if (out !== this) {
+    if (out !== (this as any)) {
       out[0] = this[0]; out[1] = this[1]; out[2] = this[2]; out[3] = this[3]
       out[12] = this[12]; out[13] = this[13]; out[14] = this[14]; out[15] = this[15]
     }
@@ -383,7 +390,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  rotateY(rad: number, out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  rotateY<Out extends Mat4Like = Mat4>(rad: number, out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     const s = Math.sin(rad), c = Math.cos(rad)
     const a00 = this[0], a01 = this[1], a02 = this[2], a03 = this[3]
     const a20 = this[8], a21 = this[9], a22 = this[10], a23 = this[11]
@@ -393,7 +400,7 @@ export class Mat4 extends Float32Array {
     out[8] = a00 * s + a20 * c; out[9] = a01 * s + a21 * c
     out[10] = a02 * s + a22 * c; out[11] = a03 * s + a23 * c
 
-    if (out !== this) {
+    if (out !== (this as any)) {
       out[4] = this[4]; out[5] = this[5]; out[6] = this[6]; out[7] = this[7]
       out[12] = this[12]; out[13] = this[13]; out[14] = this[14]; out[15] = this[15]
     }
@@ -407,7 +414,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  rotateZ(rad: number, out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  rotateZ<Out extends Mat4Like = Mat4>(rad: number, out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     const s = Math.sin(rad), c = Math.cos(rad)
     const a00 = this[0], a01 = this[1], a02 = this[2], a03 = this[3]
     const a10 = this[4], a11 = this[5], a12 = this[6], a13 = this[7]
@@ -417,7 +424,7 @@ export class Mat4 extends Float32Array {
     out[4] = a10 * c - a00 * s; out[5] = a11 * c - a01 * s
     out[6] = a12 * c - a02 * s; out[7] = a13 * c - a03 * s
 
-    if (out !== this) {
+    if (out !== (this as any)) {
       out[8] = this[8]; out[9] = this[9]; out[10] = this[10]; out[11] = this[11]
       out[12] = this[12]; out[13] = this[13]; out[14] = this[14]; out[15] = this[15]
     }
@@ -430,7 +437,7 @@ export class Mat4 extends Float32Array {
    * @param {Vec3} out vector to receive the translation values, defaults to new Vec3()
    * @returns {Vec3} out
    */
-  getTranslation(out = new Vec3()) {
+  getTranslation<Out extends Vec3Like = Vec3>(out: Out = new this.vec3() as Out) {
     out[0] = this[12]; out[1] = this[13]; out[2] = this[14]
     return out
   }
@@ -441,7 +448,7 @@ export class Mat4 extends Float32Array {
    * @param {Vec3} out vector to receive the scaling factor values, defaults to new Vec3()
    * @returns {Vec3} out
    */
-  getScaling(out = new Vec3()) {
+  getScaling<Out extends Vec3Like = Vec3>(out: Out = new this.vec3() as Out) {
     const m11 = this[0], m12 = this[1], m13 = this[2]
     const m21 = this[4], m22 = this[5], m23 = this[6]
     const m31 = this[8], m32 = this[9], m33 = this[10]
@@ -456,11 +463,11 @@ export class Mat4 extends Float32Array {
    *  of a transformation matrix. If a matrix is built with
    *  fromRotationTranslation, the returned quaternion will be the
    *  same as the quaternion originally supplied.
-   * 
+   *
    * @param {Quat} out quaternion to receive the rotation values, defaults to new Quat()
    * @returns {Quat} out
    */
-  getRotation(out = new Quat()) {
+  getRotation<Out extends QuatLike = Quat>(out: Out = new this.quat() as Out) {
     const scaling = this.getScaling()
     const is1 = 1 / scaling[0], is2 = 1 / scaling[1], is3 = 1 / scaling[2]
 
@@ -507,7 +514,11 @@ export class Mat4 extends Float32Array {
    * @param {Vec3} out_s vector to receive the scaling component, defaults to new Vec3()
    * @returns {Quat} out_r
    */
-  decompose(out_r = new Quat(), out_t = new Vec3(), out_s = new Vec3()) {
+  decompose<OutR extends QuatLike = Quat, OutT extends Vec3Like = Vec3, OutS extends Vec3Like = Vec3>(
+    out_r: OutR = new this.quat() as OutR,
+    out_t: OutT = new this.vec3() as OutT,
+    out_s: OutS = new this.vec3() as OutS
+  ) {
     out_t[0] = this[12]; out_t[1] = this[13]; out_t[2] = this[14]
 
     const m11 = this[0], m12 = this[1], m13 = this[2]
@@ -562,7 +573,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static fromTranslation(v: Vec3, out = mat4()) {
+  static fromTranslation<Out extends Mat4Like = Mat4>(v: Vec3Like, out: Out = new this.prototype.mat4() as Out) {
     out[0] = out[5] = out[10] = out[15] = 1
     out[1] = out[2] = out[3] = out[4] = out[6] = out[7] = out[8] = out[9] = out[11] = 0
     out[12] = v[0]
@@ -578,7 +589,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static fromScaling(v: Vec3, out = mat4()) {
+  static fromScaling<Out extends Mat4Like = Mat4>(v: Vec3Like, out: Out = new this.prototype.mat4() as Out) {
     out[0] = v[0]
     out[5] = v[1]
     out[10] = v[2]
@@ -595,7 +606,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static fromRotation(rad: number, axis: Vec3, out = mat4()) {
+  static fromRotation<Out extends Mat4Like = Mat4>(rad: number, axis: Vec3Like, out: Out = new this.prototype.mat4() as Out) {
     let x = axis[0], y = axis[1], z = axis[2]
     let len = Math.sqrt(x * x + y * y + z * z)
     if (len < glmaths.EPSILON) return null
@@ -619,7 +630,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static fromXRotation(rad: number, out = mat4()) {
+  static fromXRotation<Out extends Mat4Like = Mat4>(rad: number, out: Out = new this.prototype.mat4() as Out) {
     const s = Math.sin(rad), c = Math.cos(rad)
     out[0] = 1
     out[1] = out[2] = out[3] = out[4] = out[7] = out[8] = out[11] = out[12] = out[13] = out[14] = 0
@@ -638,7 +649,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static fromYRotation(rad: number, out = mat4()) {
+  static fromYRotation<Out extends Mat4Like = Mat4>(rad: number, out: Out = new this.prototype.mat4() as Out) {
     const s = Math.sin(rad), c = Math.cos(rad)
     out[0] = c
     out[1] = out[3] = out[4] = out[6] = out[7] = out[9] = out[11] = out[12] = out[13] = out[14] = 0
@@ -656,12 +667,12 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static fromZRotation(rad: number, out = mat4()) {
+  static fromZRotation<Out extends Mat4Like = Mat4>(rad: number, out: Out = new this.prototype.mat4() as Out) {
     const s = Math.sin(rad), c = Math.cos(rad)
     out[0] = c
-    out[1] = s 
+    out[1] = s
     out[4] = -s
-    out[5] = c 
+    out[5] = c
     out[2] = out[3] = out[6] = out[7] = out[8] = out[9] = out[11] = out[12] = out[13] = out[14] = 0
     out[10] = out[15] = 1
     return out
@@ -675,7 +686,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static fromRotationTranslation(q: Quat, v: Vec3, out = mat4()) {
+  static fromRotationTranslation<Out extends Mat4Like = Mat4>(q: QuatLike, v: Vec3Like, out: Out = new this.prototype.mat4() as Out) {
     const x = q[0], y = q[1], z = q[2], w = q[3]
     const x2 = x + x, y2 = y + y, z2 = z + z
     const xx = x * x2, xy = x * y2, xz = x * z2
@@ -699,7 +710,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static fromRotationTranslationScale(q: Quat, v: Vec3, s: Vec3, out = mat4()) {
+  static fromRotationTranslationScale<Out extends Mat4Like = Mat4>(q: QuatLike, v: Vec3Like, s: Vec3Like, out: Out = new this.prototype.mat4() as Out) {
     const x = q[0], y = q[1], z = q[2], w = q[3]
     const x2 = x + x, y2 = y + y, z2 = z + z
     const xx = x * x2, xy = x * y2, xz = x * z2
@@ -708,9 +719,9 @@ export class Mat4 extends Float32Array {
     const sx = s[0], sy = s[1], sz = s[2]
 
     out[0] = (1 - (yy + zz)) * sx; out[1] = (xy + wz) * sx; out[2] = (xz - wy) * sx;
-    out[3] = out[7] = out[11] = 0 
+    out[3] = out[7] = out[11] = 0
     out[4] = (xy - wz) * sy; out[5] = (1 - (xx + zz)) * sy; out[6] = (yz + wx) * sy;
-    out[8] = (xz + wy) * sz; out[9] = (yz - wx) * sz; out[10] = (1 - (xx + yy)) * sz; 
+    out[8] = (xz + wy) * sz; out[9] = (yz - wx) * sz; out[10] = (1 - (xx + yy)) * sz;
     out[12] = v[0]; out[13] = v[1]; out[14] = v[2]; out[15] = 1
     return out
   }
@@ -725,7 +736,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static fromRotationTranslationScaleOrigin(q: Quat, v: Vec3, s: Vec3, o: Vec3, out = mat4()) {
+  static fromRotationTranslationScaleOrigin<Out extends Mat4Like = Mat4>(q: QuatLike, v: Vec3Like, s: Vec3Like, o: Vec3Like, out: Out = new this.prototype.mat4() as Out) {
     const x = q[0], y = q[1], z = q[2], w = q[3]
     const x2 = x + x, y2 = y + y, z2 = z + z
     const xx = x * x2, xy = x * y2, xz = x * z2
@@ -744,7 +755,7 @@ export class Mat4 extends Float32Array {
     const out9 = (yz - wx) * sz
     const out10 = (1 - (xx + yy)) * sz
 
-    out[0] = out0; out[1] = out1; out[2] = out2 
+    out[0] = out0; out[1] = out1; out[2] = out2
     out[4] = out4; out[5] = out5; out[6] = out6
     out[8] = out8; out[9] = out9; out[10] = out10
     out[3] = out[7] = out[11] = 0
@@ -762,7 +773,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static fromQuat(q: Quat, out = mat4()) {
+  static fromQuat<Out extends Mat4Like = Mat4>(q: QuatLike, out: Out = new this.prototype.mat4() as Out) {
     const x = q[0], y = q[1], z = q[2], w = q[3]
     const x2 = x + x, y2 = y + y, z2 = z + z
     const xx = x * x2, yx = y * x2, yy = y * y2
@@ -789,7 +800,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static frustum(left: number, right: number, bottom: number, top: number, near: number, far: number, out = mat4()) {
+  static frustum<Out extends Mat4Like = Mat4>(left: number, right: number, bottom: number, top: number, near: number, far: number, out: Out = new this.prototype.mat4() as Out) {
     const rl = 1 / (right - left)
     const tb = 1 / (top - bottom)
     const nf = 1 / (near - far)
@@ -814,7 +825,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static perspectiveNO(fovy: number, aspect: number, near: number, far: number | null, out = mat4()) {
+  static perspectiveNO<Out extends Mat4Like = Mat4>(fovy: number, aspect: number, near: number, far: number | null, out: Out = new this.prototype.mat4() as Out) {
     const f = 1.0 / Math.tan(fovy / 2)
     const lh = glmaths.LEFT_HANDED
     out[0] = f / aspect
@@ -845,7 +856,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static perspectiveZO(fovy: number, aspect: number, near: number, far: number | null, out = mat4()) {
+  static perspectiveZO<Out extends Mat4Like = Mat4>(fovy: number, aspect: number, near: number, far: number | null, out: Out = new this.prototype.mat4() as Out) {
     const f = 1.0 / Math.tan(fovy / 2)
     const lh = glmaths.LEFT_HANDED
     out[0] = f / aspect; out[1] = 0; out[2] = 0; out[3] = 0
@@ -872,7 +883,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static perspectiveFromFieldOfView(fov: { upDegrees: number, downDegrees: number, leftDegrees: number, rightDegrees: number }, near: number, far: number, out = mat4()) {
+  static perspectiveFromFieldOfView<Out extends Mat4Like = Mat4>(fov: { upDegrees: number, downDegrees: number, leftDegrees: number, rightDegrees: number }, near: number, far: number, out: Out = new this.prototype.mat4() as Out) {
     const upTan = Math.tan((fov.upDegrees * Math.PI) / 180.0)
     const downTan = Math.tan((fov.downDegrees * Math.PI) / 180.0)
     const leftTan = Math.tan((fov.leftDegrees * Math.PI) / 180.0)
@@ -907,7 +918,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static orthoNO(left: number, right: number, bottom: number, top: number, near: number, far: number, out = mat4()) {
+  static orthoNO<Out extends Mat4Like = Mat4>(left: number, right: number, bottom: number, top: number, near: number, far: number, out: Out = new this.prototype.mat4() as Out) {
     const lr = 1 / (left - right)
     const bt = 1 / (bottom - top)
     const nf = 1 / (near - far)
@@ -934,7 +945,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static orthoZO(left: number, right: number, bottom: number, top: number, near: number, far: number, out = mat4()) {
+  static orthoZO<Out extends Mat4Like = Mat4>(left: number, right: number, bottom: number, top: number, near: number, far: number, out: Out = new this.prototype.mat4() as Out) {
     const lr = 1 / (left - right)
     const bt = 1 / (bottom - top)
     const nf = 1 / (near - far)
@@ -956,7 +967,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static lookAt(eye: Vec3, center: Vec3, up: Vec3, out = mat4()) {
+  static lookAt<Out extends Mat4Like = Mat4>(eye: Vec3Like, center: Vec3Like, up: Vec3Like, out: Out = new this.prototype.mat4() as Out) {
     let x0, x1, x2, y0, y1, y2, z0, z1, z2, len
 
     const eyex = eye[0], eyey = eye[1], eyez = eye[2]
@@ -1012,7 +1023,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  static targetTo(eye: Vec3, target: Vec3, up: Vec3, out = mat4()) {
+  static targetTo<Out extends Mat4Like = Mat4>(eye: Vec3Like, target: Vec3Like, up: Vec3Like, out: Out = new this.prototype.mat4() as Out) {
     const eyex = eye[0], eyey = eye[1], eyez = eye[2]
     const upx = up[0], upy = up[1], upz = up[2]
 
@@ -1054,7 +1065,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to a new Mat4
    * @returns {Mat4} out
    */
-  static infinitePerspective(fovy: number, aspect: number, near: number, out = mat4()) {
+  static infinitePerspective<Out extends Mat4Like = Mat4>(fovy: number, aspect: number, near: number, out: Out = new this.prototype.mat4() as Out) {
     const f = 1.0 / Math.tan(fovy / 2)
     const lh = glmaths.LEFT_HANDED
     out[0] = f / aspect
@@ -1077,7 +1088,7 @@ export class Mat4 extends Float32Array {
    * @param {Vec3} out the receiving vector, defaults to a new Vec3
    * @returns {Vec3} out
    */
-  static project(obj: Vec3, model: Mat4, proj: Mat4, viewport: Vec4, out = new Vec3()): Vec3 {
+  static project<Out extends Vec3Like = Vec3>(obj: Vec3Like, model: Mat4Like, proj: Mat4Like, viewport: Vec4Like, out: Out = new this.prototype.vec3() as Out): Out {
     const x = obj[0], y = obj[1], z = obj[2]
     const tx = model[0]*x + model[4]*y + model[8]*z + model[12]
     const ty = model[1]*x + model[5]*y + model[9]*z + model[13]
@@ -1109,13 +1120,13 @@ export class Mat4 extends Float32Array {
    * @param {Vec3} out the receiving vector, defaults to a new Vec3
    * @returns {Vec3 | null} out, or null if the combined matrix is not invertible
    */
-  static unProject(win: Vec3, model: Mat4, proj: Mat4, viewport: Vec4, out = new Vec3()): Vec3 | null {
+  static unProject<Out extends Vec3Like = Vec3>(win: Vec3Like, model: Mat4Like, proj: Mat4Like, viewport: Vec4Like, out: Out = new this.prototype.vec3() as Out): Out | null {
     const a00 = model[0], a01 = model[1], a02 = model[2], a03 = model[3]
     const a10 = model[4], a11 = model[5], a12 = model[6], a13 = model[7]
     const a20 = model[8], a21 = model[9], a22 = model[10], a23 = model[11]
     const a30 = model[12], a31 = model[13], a32 = model[14], a33 = model[15]
 
-    const pm = mat4()
+    const pm = new this.prototype.mat4()
     let b0 = proj[0], b1 = proj[1], b2 = proj[2], b3 = proj[3]
     pm[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30
     pm[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31
@@ -1172,11 +1183,11 @@ export class Mat4 extends Float32Array {
   /**
    * Adds two mat4's
    *
-   * @param {Mat4} b the second operand
+   * @param {Mat4Like} b the second operand
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  plus(b: Mat4, out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  plus<Out extends Mat4Like = Mat4>(b: Mat4Like, out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     out[0] = this[0] + b[0]; out[1] = this[1] + b[1]; out[2] = this[2] + b[2]; out[3] = this[3] + b[3]
     out[4] = this[4] + b[4]; out[5] = this[5] + b[5]; out[6] = this[6] + b[6]; out[7] = this[7] + b[7]
     out[8] = this[8] + b[8]; out[9] = this[9] + b[9]; out[10] = this[10] + b[10]; out[11] = this[11] + b[11]
@@ -1187,11 +1198,11 @@ export class Mat4 extends Float32Array {
   /**
    * Subtracts matrix b from a mat4
    *
-   * @param {Mat4} b the second operand
+   * @param {Mat4Like} b the second operand
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  minus(b: Mat4, out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  minus<Out extends Mat4Like = Mat4>(b: Mat4Like, out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     out[0] = this[0] - b[0]; out[1] = this[1] - b[1]; out[2] = this[2] - b[2]; out[3] = this[3] - b[3]
     out[4] = this[4] - b[4]; out[5] = this[5] - b[5]; out[6] = this[6] - b[6]; out[7] = this[7] - b[7]
     out[8] = this[8] - b[8]; out[9] = this[9] - b[9]; out[10] = this[10] - b[10]; out[11] = this[11] - b[11]
@@ -1206,7 +1217,7 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  scaleScalar(b: number, out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  scaleScalar<Out extends Mat4Like = Mat4>(b: number, out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     out[0] = this[0] * b; out[1] = this[1] * b; out[2] = this[2] * b; out[3] = this[3] * b
     out[4] = this[4] * b; out[5] = this[5] * b; out[6] = this[6] * b; out[7] = this[7] * b
     out[8] = this[8] * b; out[9] = this[9] * b; out[10] = this[10] * b; out[11] = this[11] * b
@@ -1217,12 +1228,12 @@ export class Mat4 extends Float32Array {
   /**
    * Adds two mat4's after multiplying each element of the second operand by a scalar value
    *
-   * @param {Mat4} b the second operand
+   * @param {Mat4Like} b the second operand
    * @param {Number} scale the amount to scale b's elements by before adding
    * @param {Mat4} out the receiving matrix, defaults to new mat4()
    * @returns {Mat4} out
    */
-  multiplyScalarAndAdd(b: Mat4, scale: number, out = glmaths.ALWAYS_COPY ? mat4() : this) {
+  multiplyScalarAndAdd<Out extends Mat4Like = Mat4>(b: Mat4Like, scale: number, out: Out = (glmaths.ALWAYS_COPY ? new this.mat4() : this) as Out) {
     out[0] = this[0] + b[0] * scale; out[1] = this[1] + b[1] * scale
     out[2] = this[2] + b[2] * scale; out[3] = this[3] + b[3] * scale
     out[4] = this[4] + b[4] * scale; out[5] = this[5] + b[5] * scale
@@ -1240,16 +1251,16 @@ export class Mat4 extends Float32Array {
    * @returns {String} string representation of the matrix
    */
   toString() {
-    return `mat4(${this[0]}, ${this[1]}, ${this[2]}, ${this[3]},\t${this[4]}, ${this[5]}, ${this[6]}, ${this[7]},\t${this[8]}, ${this[9]}, ${this[10]}, ${this[11]},\t${this[12]}, ${this[13]}, ${this[14]}, ${this[15]})`
+    return `${this.$str}(${this[0]}, ${this[1]}, ${this[2]}, ${this[3]},\t${this[4]}, ${this[5]}, ${this[6]}, ${this[7]},\t${this[8]}, ${this[9]}, ${this[10]}, ${this[11]},\t${this[12]}, ${this[13]}, ${this[14]}, ${this[15]})`
   }
 
   /**
    * Returns whether a mat4 and another have exactly the same elements in the same position
    *
-   * @param {Mat4} b the matrix to compare against
+   * @param {Mat4Like} b the matrix to compare against
    * @returns {Boolean} true if the matrices are equal, false otherwise
    */
-  exactEquals(b: Mat4) {
+  exactEquals(b: Mat4Like) {
     return (
       this[0] === b[0] && this[1] === b[1] && this[2] === b[2] && this[3] === b[3] &&
       this[4] === b[4] && this[5] === b[5] && this[6] === b[6] && this[7] === b[7] &&
@@ -1261,10 +1272,10 @@ export class Mat4 extends Float32Array {
   /**
    * Returns whether a mat4 and another are approximately equal
    *
-   * @param {Mat4} b the matrix to compare against
+   * @param {Mat4Like} b the matrix to compare against
    * @returns {Boolean} true if the matrices are approximately equal, false otherwise
    */
-  equals(b: Mat4) {
+  equals(b: Mat4Like) {
     return (
       equals(this[0], b[0]) && equals(this[1], b[1]) && equals(this[2], b[2]) && equals(this[3], b[3]) &&
       equals(this[4], b[4]) && equals(this[5], b[5]) && equals(this[6], b[6]) && equals(this[7], b[7]) &&
@@ -1274,24 +1285,73 @@ export class Mat4 extends Float32Array {
   }
 }
 
-export interface Mat4 {
-  add: (b: Mat4, out?: Mat4) => Mat4
-  sub: (b: Mat4, out?: Mat4) => Mat4
-  subtract: (b: Mat4, out?: Mat4) => Mat4
-  mul(b: Vec2): Vec2
-  mul(b: Vec3): Vec3
-  mul(b: Vec4): Vec4
-  mul(b: Mat4, out?: Mat4): Mat4
-  mult(b: Vec2): Vec2
-  mult(b: Vec3): Vec3
-  mult(b: Vec4): Vec4
-  mult(b: Mat4, out?: Mat4): Mat4
-  times(b: Vec2): Vec2
-  times(b: Vec3): Vec3
-  times(b: Vec4): Vec4
-  times(b: Mat4, out?: Mat4): Mat4
+interface Mat4Impl<
+  ThisMat4 extends Mat4Like,
+  ThisVec2 extends Vec2Like = Vec2,
+  ThisVec3 extends Vec3Like = Vec3,
+  ThisVec4 extends Vec4Like = Vec4,
+  ThisQuat extends QuatLike = Quat
+> {
+  clone(): ThisMat4
+  transpose<Out extends Mat4Like = ThisMat4>(out?: Out): Out
+  invert<Out extends Mat4Like = ThisMat4>(out?: Out): Out | null
+  adjoint<Out extends Mat4Like = ThisMat4>(out?: Out): Out
+  determinant(): number
+
+  multiply<Out extends Vec2Like = ThisVec2>(b: Vec2Like, out?: Out): Out
+  multiply<Out extends Vec3Like = ThisVec3>(b: Vec3Like, out?: Out): Out
+  multiply<Out extends Vec4Like = ThisVec4>(b: Vec4Like, out?: Out): Out
+  multiply<Out extends Mat4Like = ThisMat4>(b: Mat4Like, out?: Out): Out
+
+  translate<Out extends Mat4Like = ThisMat4>(v: Vec3Like, out?: Out): Out
+  scale<Out extends Mat4Like = ThisMat4>(v: Vec3Like, out?: Out): Out
+  rotate<Out extends Mat4Like = ThisMat4>(rad: number, axis: Vec3Like, out?: Out): Out | null
+  rotateX<Out extends Mat4Like = ThisMat4>(rad: number, out?: Out): Out
+  rotateY<Out extends Mat4Like = ThisMat4>(rad: number, out?: Out): Out
+  rotateZ<Out extends Mat4Like = ThisMat4>(rad: number, out?: Out): Out
+
+  getTranslation<Out extends Vec3Like = ThisVec3>(out?: Out): Out
+  getScaling<Out extends Vec3Like = ThisVec3>(out?: Out): Out
+  getRotation<Out extends QuatLike = ThisQuat>(out?: Out): Out
+  decompose<OutR extends QuatLike = ThisQuat, OutT extends Vec3Like = ThisVec3, OutS extends Vec3Like = ThisVec3>(out_r?: OutR, out_t?: OutT, out_s?: OutS): OutR
+
+  plus<Out extends Mat4Like = ThisMat4>(b: Mat4Like, out?: Out): Out
+  minus<Out extends Mat4Like = ThisMat4>(b: Mat4Like, out?: Out): Out
+  scaleScalar<Out extends Mat4Like = ThisMat4>(b: number, out?: Out): Out
+  multiplyScalarAndAdd<Out extends Mat4Like = ThisMat4>(b: Mat4Like, scale: number, out?: Out): Out
+
+  frob(): number
+  equals(b: Mat4Like): boolean
+  exactEquals(b: Mat4Like): boolean
+  toString(): string
+
+  add<Out extends Mat4Like = ThisMat4>(b: Mat4Like, out?: Out): Out
+  sub<Out extends Mat4Like = ThisMat4>(b: Mat4Like, out?: Out): Out
+  subtract<Out extends Mat4Like = ThisMat4>(b: Mat4Like, out?: Out): Out
+  mul<Out extends Vec2Like = ThisVec2>(b: Vec2Like, out?: Out): Out
+  mul<Out extends Vec3Like = ThisVec3>(b: Vec3Like, out?: Out): Out
+  mul<Out extends Vec4Like = ThisVec4>(b: Vec4Like, out?: Out): Out
+  mul<Out extends Mat4Like = ThisMat4>(b: Mat4Like, out?: Out): Out
+  mult<Out extends Vec2Like = ThisVec2>(b: Vec2Like, out?: Out): Out
+  mult<Out extends Vec3Like = ThisVec3>(b: Vec3Like, out?: Out): Out
+  mult<Out extends Vec4Like = ThisVec4>(b: Vec4Like, out?: Out): Out
+  mult<Out extends Mat4Like = ThisMat4>(b: Mat4Like, out?: Out): Out
+  times<Out extends Vec2Like = ThisVec2>(b: Vec2Like, out?: Out): Out
+  times<Out extends Vec3Like = ThisVec3>(b: Vec3Like, out?: Out): Out
+  times<Out extends Vec4Like = ThisVec4>(b: Vec4Like, out?: Out): Out
+  times<Out extends Mat4Like = ThisMat4>(b: Mat4Like, out?: Out): Out
   str: () => string
-  multiplyScalar: (b: number, out?: Mat4) => Mat4
+  multiplyScalar<Out extends Mat4Like = ThisMat4>(b: number, out?: Out): Out
+}
+
+// @ts-ignore
+export interface Mat4 extends Mat4Impl<Mat4, Vec2, Vec3, Vec4, Quat> {
+  $str: string
+  mat4: typeof Mat4
+  vec2: typeof Vec2
+  vec3: typeof Vec3
+  vec4: typeof Vec4
+  quat: typeof Quat
 }
 
 // @aliases
@@ -1304,15 +1364,91 @@ Mat4.prototype.times = Mat4.prototype.multiply
 Mat4.prototype.str = Mat4.prototype.toString
 Mat4.prototype.multiplyScalar = Mat4.prototype.scaleScalar
 
-const createMat4 = (...args: (number | Float32Array)[]): Mat4 => {
-  const out = new Mat4()
-  let i = 0
-  for (const a of args) {
-    if (typeof a === 'number') out[i++] = a
-    else for (const v of a) out[i++] = v
+/**
+ * 2x2 Matrix in column-major order, stored as 64 bit floats
+ * @extends Float64Array
+ */
+export class Mat4d extends Float64Array {
+
+  static get identity() { return new Mat4d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
+  static get Identity() { return new Mat4d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
+  static get IDENTITY() { return new Mat4d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
+
+  /**
+   * Creates a new 4x4 matrix
+   *
+   * @param {Number} m00 component in column 0, row 0
+   * @param {Number} m01 component in column 0, row 1
+   * @param {Number} m02 component in column 0, row 2
+   * @param {Number} m03 component in column 0, row 3
+   * @param {Number} m10 component in column 1, row 0
+   * @param {Number} m11 component in column 1, row 1
+   * @param {Number} m12 component in column 1, row 2
+   * @param {Number} m13 component in column 1, row 3
+   * @param {Number} m20 component in column 2, row 0
+   * @param {Number} m21 component in column 2, row 1
+   * @param {Number} m22 component in column 2, row 2
+   * @param {Number} m23 component in column 2, row 3
+   * @param {Number} m30 component in column 3, row 0
+   * @param {Number} m31 component in column 3, row 1
+   * @param {Number} m32 component in column 3, row 2
+   * @param {Number} m33 component in column 3, row 3
+   */
+  constructor(
+    m00 = 0, m01 = 0, m02 = 0, m03 = 0,
+    m10 = 0, m11 = 0, m12 = 0, m13 = 0,
+    m20 = 0, m21 = 0, m22 = 0, m23 = 0,
+    m30 = 0, m31 = 0, m32 = 0, m33 = 0
+  ) {
+    super(16)
+    this[0]  = m00
+    this[1]  = m01
+    this[2]  = m02
+    this[3]  = m03
+    this[4]  = m10
+    this[5]  = m11
+    this[6]  = m12
+    this[7]  = m13
+    this[8]  = m20
+    this[9]  = m21
+    this[10] = m22
+    this[11] = m23
+    this[12] = m30
+    this[13] = m31
+    this[14] = m32
+    this[15] = m33
   }
-  return out
+
+  static fromTranslation: <Out extends Mat4Like = Mat4d>(v: Vec3Like, out?: Out) => Out
+  static fromScaling: <Out extends Mat4Like = Mat4d>(v: Vec3Like, out?: Out) => Out
+  static fromRotation: <Out extends Mat4Like = Mat4d>(rad: number, axis: Vec3Like, out?: Out) => Out | null
+  static fromXRotation: <Out extends Mat4Like = Mat4d>(rad: number, out?: Out) => Out
+  static fromYRotation: <Out extends Mat4Like = Mat4d>(rad: number, out?: Out) => Out
+  static fromZRotation: <Out extends Mat4Like = Mat4d>(rad: number, out?: Out) => Out
+  static fromRotationTranslation: <Out extends Mat4Like = Mat4d>(q: QuatLike, v: Vec3Like, out?: Out) => Out
+  static fromRotationTranslationScale: <Out extends Mat4Like = Mat4d>(q: QuatLike, v: Vec3Like, s: Vec3Like, out?: Out) => Out
+  static fromRotationTranslationScaleOrigin: <Out extends Mat4Like = Mat4d>(q: QuatLike, v: Vec3Like, s: Vec3Like, o: Vec3Like, out?: Out) => Out
+  static fromQuat: <Out extends Mat4Like = Mat4d>(q: QuatLike, out?: Out) => Out
+  static frustum: <Out extends Mat4Like = Mat4d>(left: number, right: number, bottom: number, top: number, near: number, far: number, out?: Out) => Out
+  static perspectiveNO: <Out extends Mat4Like = Mat4d>(fovy: number, aspect: number, near: number, far: number | null, out?: Out) => Out
+  static perspective: <Out extends Mat4Like = Mat4d>(fovy: number, aspect: number, near: number, far: number | null, out?: Out) => Out
+  static perspectiveZO: <Out extends Mat4Like = Mat4d>(fovy: number, aspect: number, near: number, far: number | null, out?: Out) => Out
+  static perspectiveFromFieldOfView: <Out extends Mat4Like = Mat4d>(fov: { upDegrees: number, downDegrees: number, leftDegrees: number, rightDegrees: number }, near: number, far: number, out?: Out) => Out
+  static orthoNO: <Out extends Mat4Like = Mat4d>(left: number, right: number, bottom: number, top: number, near: number, far: number, out?: Out) => Out
+  static ortho: <Out extends Mat4Like = Mat4d>(left: number, right: number, bottom: number, top: number, near: number, far: number, out?: Out) => Out
+  static orthoZO: <Out extends Mat4Like = Mat4d>(left: number, right: number, bottom: number, top: number, near: number, far: number, out?: Out) => Out
+  static lookAt: <Out extends Mat4Like = Mat4d>(eye: Vec3Like, center: Vec3Like, up: Vec3Like, out?: Out) => Out
+  static targetTo: <Out extends Mat4Like = Mat4d>(eye: Vec3Like, target: Vec3Like, up: Vec3Like, out?: Out) => Out
+  static infinitePerspective: <Out extends Mat4Like = Mat4d>(fovy: number, aspect: number, near: number, out?: Out) => Out
+  static project: <Out extends Vec3Like = Vec3d>(obj: Vec3Like, model: Mat4Like, proj: Mat4Like, viewport: Vec4Like, out?: Out) => Out
+  static unProject: <Out extends Vec3Like = Vec3d>(win: Vec3Like, model: Mat4Like, proj: Mat4Like, viewport: Vec4Like, out?: Out) => Out | null
 }
-Object.setPrototypeOf(createMat4, Mat4)
-export const mat4 = createMat4 as typeof createMat4 & typeof Mat4
-export const mat4x4 = mat4
+// @ts-ignore
+export interface Mat4d extends Mat4Impl<Mat4d, Vec2d, Vec3d, Vec4d, Quatd> {
+  $str: string
+  mat4: typeof Mat4d
+  vec2: typeof Vec2d
+  vec3: typeof Vec3d
+  vec4: typeof Vec4d
+  quat: typeof Quatd
+}

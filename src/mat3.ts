@@ -1,20 +1,22 @@
 import glmaths from '.'
-import { equals } from './internalUtils'
-import { Vec2 } from './vec2'
-import { Vec3 } from './vec3'
-import { Quat } from './quat'
-import { Mat2x3 } from './mat2x3'
-import { Mat4 } from './mat4'
+import { create, equals } from './internalUtils'
+import { Vec2, Vec2Like } from './vec2'
+import { Vec3, Vec3Like } from './vec3'
+import { Quat, QuatLike } from './quat'
+import { Mat2x3, Mat2x3Like } from './mat2x3'
+import { Mat4, Mat4Like } from './mat4'
+
+export type Mat3Like = Mat3 | Mat3d
 
 /**
- * 3x3 Matrix in column-major order
+ * 3x3 Matrix in column-major order, stored as 32-bit floats
  * @extends Float32Array
  */
 export class Mat3 extends Float32Array {
 
-  static get identity() { return mat3(1, 0, 0, 0, 1, 0, 0, 0, 1) }
-  static get Identity() { return mat3(1, 0, 0, 0, 1, 0, 0, 0, 1) }
-  static get IDENTITY() { return mat3(1, 0, 0, 0, 1, 0, 0, 0, 1) }
+  static get identity() { return new this.prototype.mat3(1, 0, 0, 0, 1, 0, 0, 0, 1) }
+  static get Identity() { return new this.prototype.mat3(1, 0, 0, 0, 1, 0, 0, 0, 1) }
+  static get IDENTITY() { return new this.prototype.mat3(1, 0, 0, 0, 1, 0, 0, 0, 1) }
 
   /**
    * Create a new mat3 with the given values
@@ -48,7 +50,7 @@ export class Mat3 extends Float32Array {
    * @returns {Mat3} a new Mat3
    */
   clone() {
-    return mat3(this[0], this[1], this[2], this[3], this[4], this[5], this[6], this[7], this[8])
+    return new this.mat3(this[0], this[1], this[2], this[3], this[4], this[5], this[6], this[7], this[8])
   }
 
   /**
@@ -57,8 +59,8 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3} out
    */
-  transpose(out = glmaths.ALWAYS_COPY ? mat3() : this) {
-    if (out === this) {
+  transpose<Out extends Mat3Like = Mat3>(out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
+    if (out === this as any) {
       const a01 = this[1], a02 = this[2], a12 = this[5]
       out[1] = this[3]
       out[2] = this[6]
@@ -86,7 +88,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3|null} out, or null if not invertible
    */
-  invert(out = glmaths.ALWAYS_COPY ? mat3() : this) {
+  invert<Out extends Mat3Like = Mat3>(out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
     const a00 = this[0], a01 = this[1], a02 = this[2]
     const a10 = this[3], a11 = this[4], a12 = this[5]
     const a20 = this[6], a21 = this[7], a22 = this[8]
@@ -117,7 +119,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3} out
    */
-  adjoint(out = glmaths.ALWAYS_COPY ? mat3() : this) {
+  adjoint<Out extends Mat3Like = Mat3>(out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
     const a00 = this[0], a01 = this[1], a02 = this[2]
     const a10 = this[3], a11 = this[4], a12 = this[5]
     const a20 = this[6], a21 = this[7], a22 = this[8]
@@ -153,10 +155,10 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3} out
    */
-  multiply(b: Vec2): Vec2
-  multiply(b: Vec3): Vec3
-  multiply(b: Mat3, out?: Mat3): Mat3
-  multiply(b: Mat3 | Vec3 | Vec2, out: Mat3 = glmaths.ALWAYS_COPY ? mat3() : this) {
+  multiply(b: Vec2Like): Vec2
+  multiply(b: Vec3Like): Vec3
+  multiply<Out extends Mat3Like = Mat3>(b: Mat3Like, out?: Out): Out
+  multiply<Out extends Mat3Like = Mat3>(b: Mat3Like | Vec3Like | Vec2Like, out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
     if (b instanceof Vec2)
       return b.transformMat3(this)
     if (b instanceof Vec3)
@@ -189,7 +191,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3} out
    */
-  translate(v: Vec2, out = glmaths.ALWAYS_COPY ? mat3() : this) {
+  translate<Out extends Mat3Like = Mat3>(v: Vec2Like, out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
     const a00 = this[0], a01 = this[1], a02 = this[2]
     const a10 = this[3], a11 = this[4], a12 = this[5]
     const a20 = this[6], a21 = this[7], a22 = this[8]
@@ -214,7 +216,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3} out
    */
-  rotate(rad: number, out = glmaths.ALWAYS_COPY ? mat3() : this) {
+  rotate<Out extends Mat3Like = Mat3>(rad: number, out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
     const a00 = this[0], a01 = this[1], a02 = this[2]
     const a10 = this[3], a11 = this[4], a12 = this[5]
     const a20 = this[6], a21 = this[7], a22 = this[8]
@@ -239,7 +241,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3} out
    */
-  scale(v: Vec2, out = glmaths.ALWAYS_COPY ? mat3() : this) {
+  scale<Out extends Mat3Like = Mat3>(v: Vec2Like, out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
     const x = v[0], y = v[1]
     out[0] = x * this[0]
     out[1] = x * this[1]
@@ -260,7 +262,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to mat3()
    * @returns {Mat3} out
    */
-  static fromTranslation(v: Vec2, out = mat3()) {
+  static fromTranslation<Out extends Mat3Like = Mat3>(v: Vec2Like, out: Out = new this.prototype.mat3() as Out) {
     out[0] = 1
     out[1] = 0
     out[2] = 0
@@ -280,7 +282,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to mat3()
    * @returns {Mat3} out
    */
-  static fromRotation(rad: number, out = mat3()) {
+  static fromRotation<Out extends Mat3Like = Mat3>(rad: number, out: Out = new this.prototype.mat3() as Out) {
     const s = Math.sin(rad), c = Math.cos(rad)
     out[0] = c
     out[1] = s
@@ -301,7 +303,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to mat3()
    * @returns {Mat3} out
    */
-  static fromScaling(v: Vec2, out = mat3()) {
+  static fromScaling<Out extends Mat3Like = Mat3>(v: Vec2Like, out: Out = new this.prototype.mat3() as Out) {
     out[0] = v[0]
     out[1] = 0
     out[2] = 0
@@ -321,7 +323,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to mat3()
    * @returns {Mat3} out
    */
-  static fromMat2x3(a: Mat2x3, out = mat3()) {
+  static fromMat2x3<Out extends Mat3Like = Mat3>(a: Mat2x3Like, out: Out = new this.prototype.mat3() as Out) {
     out[0] = a[0]
     out[1] = a[1]
     out[2] = 0
@@ -333,7 +335,6 @@ export class Mat3 extends Float32Array {
     out[8] = 1
     return out
   }
-  static fromMat2d: (a: Mat2x3, out?: Mat3) => Mat3
 
   /**
    * Calculates a mat3 from the given quaternion
@@ -342,7 +343,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to mat3()
    * @returns {Mat3} out
    */
-  static fromQuat(q: Quat, out = mat3()) {
+  static fromQuat<Out extends Mat3Like = Mat3>(q: QuatLike, out: Out = new this.prototype.mat3() as Out) {
     const x = q[0], y = q[1], z = q[2], w = q[3]
     const x2 = x + x, y2 = y + y, z2 = z + z
     const xx = x * x2, yx = y * x2, yy = y * y2
@@ -370,7 +371,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to mat3()
    * @returns {Mat3|null} out, or null if not invertible
    */
-  static normalFromMat4(a: Mat4, out = mat3()) {
+  static normalFromMat4<Out extends Mat3Like = Mat3>(a: Mat4Like, out: Out = new this.prototype.mat3() as Out) {
     const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3]
     const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7]
     const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11]
@@ -412,7 +413,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to mat3()
    * @returns {Mat3} out
    */
-  static fromMat4(a: Mat4, out = mat3()) {
+  static fromMat4<Out extends Mat3Like = Mat3>(a: Mat4Like, out: Out = new this.prototype.mat3() as Out) {
     out[0] = a[0]
     out[1] = a[1]
     out[2] = a[2]
@@ -424,7 +425,7 @@ export class Mat3 extends Float32Array {
     out[8] = a[10]
     return out
   }
-  static fromMat4x4: (a: Mat4, out?: Mat3) => Mat3
+  static fromMat4x4: <Out extends Mat3Like = Mat3>(a: Mat4Like, out?: Out) => Out
 
   /**
    * Generates a 2D projection matrix with the given bounds
@@ -434,7 +435,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to mat3()
    * @returns {Mat3} out
    */
-  static projection(width: number, height: number, out = mat3()) {
+  static projection<Out extends Mat3Like = Mat3>(width: number, height: number, out: Out = new this.prototype.mat3() as Out) {
     out[0] = 2 / width
     out[1] = 0
     out[2] = 0
@@ -463,11 +464,11 @@ export class Mat3 extends Float32Array {
   /**
    * Adds two mat3's
    *
-   * @param {Mat3} b the second operand
+   * @param {Mat3Like} b the second operand
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3} out
    */
-  plus(b: Mat3, out = glmaths.ALWAYS_COPY ? mat3() : this) {
+  plus<Out extends Mat3Like = Mat3>(b: Mat3Like, out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
     out[0] = this[0] + b[0]
     out[1] = this[1] + b[1]
     out[2] = this[2] + b[2]
@@ -483,11 +484,11 @@ export class Mat3 extends Float32Array {
   /**
    * Subtracts matrix b from this
    *
-   * @param {Mat3} b the second operand
+   * @param {Mat3Like} b the second operand
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3} out
    */
-  minus(b: Mat3, out = glmaths.ALWAYS_COPY ? mat3() : this) {
+  minus<Out extends Mat3Like = Mat3>(b: Mat3Like, out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
     out[0] = this[0] - b[0]
     out[1] = this[1] - b[1]
     out[2] = this[2] - b[2]
@@ -507,7 +508,7 @@ export class Mat3 extends Float32Array {
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3} out
    */
-  scaleScalar(b: number, out = glmaths.ALWAYS_COPY ? mat3() : this) {
+  scaleScalar<Out extends Mat3Like = Mat3>(b: number, out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
     out[0] = this[0] * b
     out[1] = this[1] * b
     out[2] = this[2] * b
@@ -523,12 +524,12 @@ export class Mat3 extends Float32Array {
   /**
    * Adds two mat3's after multiplying each element of the second operand by a scalar value
    *
-   * @param {Mat3} b the second operand
+   * @param {Mat3Like} b the second operand
    * @param {Number} scale the amount to scale b's elements by before adding
    * @param {Mat3} out the receiving matrix, defaults to new mat3()
    * @returns {Mat3} out
    */
-  multiplyScalarAndAdd(b: Mat3, scale: number, out = glmaths.ALWAYS_COPY ? mat3() : this) {
+  multiplyScalarAndAdd<Out extends Mat3Like = Mat3>(b: Mat3Like, scale: number, out: Out = (glmaths.ALWAYS_COPY ? new this.mat3() : this) as Out) {
     out[0] = this[0] + b[0] * scale
     out[1] = this[1] + b[1] * scale
     out[2] = this[2] + b[2] * scale
@@ -547,16 +548,16 @@ export class Mat3 extends Float32Array {
    * @returns {String} string representation of the matrix
    */
   toString() {
-    return `mat3(${this[0]}, ${this[1]}, ${this[2]},\t${this[3]}, ${this[4]}, ${this[5]},\t${this[6]}, ${this[7]}, ${this[8]})`
+    return `${this.$str}(${this[0]}, ${this[1]}, ${this[2]},\t${this[3]}, ${this[4]}, ${this[5]},\t${this[6]}, ${this[7]}, ${this[8]})`
   }
 
   /**
    * Returns whether two mat3's have exactly equal elements
    *
-   * @param {Mat3} b the second matrix
+   * @param {Mat3Like} b the second matrix
    * @returns {Boolean} true if the matrices are exactly equal
    */
-  exactEquals(b: Mat3) {
+  exactEquals(b: Mat3Like) {
     return (
       this[0] === b[0] &&
       this[1] === b[1] &&
@@ -573,10 +574,10 @@ export class Mat3 extends Float32Array {
   /**
    * Returns whether two mat3's have approximately equal elements
    *
-   * @param {Mat3} b the second matrix
+   * @param {Mat3Like} b the second matrix
    * @returns {Boolean} true if the matrices are approximately equal
    */
-  equals(b: Mat3) {
+  equals(b: Mat3Like) {
     return (
       equals(this[0], b[0]) && equals(this[1], b[1]) && equals(this[2], b[2]) &&
       equals(this[3], b[3]) && equals(this[4], b[4]) && equals(this[5], b[5]) &&
@@ -585,25 +586,49 @@ export class Mat3 extends Float32Array {
   }
 }
 
-export interface Mat3 {
-  add: (b: Mat3, out?: Mat3) => Mat3
-  sub: (b: Mat3, out?: Mat3) => Mat3
-  subtract: (b: Mat3, out?: Mat3) => Mat3
-  mul(b: Vec2): Vec2
-  mul(b: Vec3): Vec3
-  mul(b: Mat3, out?: Mat3): Mat3
-  mult(b: Vec2): Vec2
-  mult(b: Vec3): Vec3
-  mult(b: Mat3, out?: Mat3): Mat3
-  times(b: Vec2): Vec2
-  times(b: Vec3): Vec3
-  times(b: Mat3, out?: Mat3): Mat3
+interface Mat3Impl<ThisMat3 extends Mat3Like> {
+  transpose<Out extends Mat3Like = ThisMat3>(out?: Out): Out
+  invert<Out extends Mat3Like = ThisMat3>(out?: Out): Out | null
+  adjoint<Out extends Mat3Like = ThisMat3>(out?: Out): Out
+  determinant(): number
+  multiply(b: Vec2Like): Vec2
+  multiply(b: Vec3Like): Vec3
+  multiply<Out extends Mat3Like = ThisMat3>(b: Mat3Like, out?: Out): Out
+  translate<Out extends Mat3Like = ThisMat3>(v: Vec2Like, out?: Out): Out
+  rotate<Out extends Mat3Like = ThisMat3>(rad: number, out?: Out): Out
+  scale<Out extends Mat3Like = ThisMat3>(v: Vec2Like, out?: Out): Out
+  frob(): number
+  plus<Out extends Mat3Like = ThisMat3>(b: Mat3Like, out?: Out): Out
+  minus<Out extends Mat3Like = ThisMat3>(b: Mat3Like, out?: Out): Out
+  scaleScalar<Out extends Mat3Like = ThisMat3>(b: number, out?: Out): Out
+  multiplyScalarAndAdd<Out extends Mat3Like = ThisMat3>(b: Mat3Like, scale: number, out?: Out): Out
+  exactEquals(b: Mat3Like): boolean
+  equals(b: Mat3Like): boolean
+  clone(): ThisMat3
+  toString(): string
+
+  add<Out extends Mat3Like = ThisMat3>(b: Mat3Like, out?: Out): Out
+  sub<Out extends Mat3Like = ThisMat3>(b: Mat3Like, out?: Out): Out
+  subtract<Out extends Mat3Like = ThisMat3>(b: Mat3Like, out?: Out): Out
+  mul(b: Vec2Like): Vec2
+  mul(b: Vec3Like): Vec3
+  mul<Out extends Mat3Like = ThisMat3>(b: Mat3Like, out?: Out): Out
+  mult(b: Vec2Like): Vec2
+  mult(b: Vec3Like): Vec3
+  mult<Out extends Mat3Like = ThisMat3>(b: Mat3Like, out?: Out): Out
+  times(b: Vec2Like): Vec2
+  times(b: Vec3Like): Vec3
+  times<Out extends Mat3Like = ThisMat3>(b: Mat3Like, out?: Out): Out
+  multiplyScalar<Out extends Mat3Like = ThisMat3>(b: number, out?: Out): Out
   str: () => string
-  multiplyScalar: (b: number, out?: Mat3) => Mat3
+}
+
+export interface Mat3 extends Mat3Impl<Mat3> {
+  $str: string
+  mat3: typeof Mat3
 }
 
 // @aliases
-Mat3.fromMat2d = Mat3.fromMat2x3
 Mat3.fromMat4x4 = Mat3.fromMat4
 Mat3.prototype.add = Mat3.prototype.plus
 Mat3.prototype.sub = Mat3.prototype.minus
@@ -614,15 +639,52 @@ Mat3.prototype.times = Mat3.prototype.multiply
 Mat3.prototype.str = Mat3.prototype.toString
 Mat3.prototype.multiplyScalar = Mat3.prototype.scaleScalar
 
-const createMat3 = (...args: (number | Float32Array)[]): Mat3 => {
-  const out = new Mat3()
-  let i = 0
-  for (const a of args) {
-    if (typeof a === 'number') out[i++] = a
-    else for (const v of a) out[i++] = v
+/**
+ * 2x2 Matrix in column-major order, stored as 64 bit floats
+ * @extends Float64Array
+ */
+export class Mat3d extends Float64Array {
+  static get identity() { return new Mat3d(1, 0, 0, 0, 1, 0, 0, 0, 1) }
+  static get Identity() { return new Mat3d(1, 0, 0, 0, 1, 0, 0, 0, 1) }
+  static get IDENTITY() { return new Mat3d(1, 0, 0, 0, 1, 0, 0, 0, 1) }
+
+  /**
+   * Create a new mat3 with the given values
+   *
+   * @param {Number} m00 Component in column 0, row 0 position (index 0)
+   * @param {Number} m01 Component in column 0, row 1 position (index 1)
+   * @param {Number} m02 Component in column 0, row 2 position (index 2)
+   * @param {Number} m10 Component in column 1, row 0 position (index 3)
+   * @param {Number} m11 Component in column 1, row 1 position (index 4)
+   * @param {Number} m12 Component in column 1, row 2 position (index 5)
+   * @param {Number} m20 Component in column 2, row 0 position (index 6)
+   * @param {Number} m21 Component in column 2, row 1 position (index 7)
+   * @param {Number} m22 Component in column 2, row 2 position (index 8)
+   */
+  constructor(m00 = 0, m01 = 0, m02 = 0, m10 = 0, m11 = 0, m12 = 0, m20 = 0, m21 = 0, m22 = 0) {
+    super(9)
+    this[0] = m00
+    this[1] = m01
+    this[2] = m02
+    this[3] = m10
+    this[4] = m11
+    this[5] = m12
+    this[6] = m20
+    this[7] = m21
+    this[8] = m22
   }
-  return out
+
+  static fromTranslation: <Out extends Mat3Like = Mat3d>(v: Vec2Like, out?: Out) => Out
+  static fromRotation: <Out extends Mat3Like = Mat3d>(rad: number, out?: Out) => Out
+  static fromScaling: <Out extends Mat3Like = Mat3d>(v: Vec2Like, out?: Out) => Out
+  static fromMat2x3: <Out extends Mat3Like = Mat3d>(a: Mat2x3Like, out?: Out) => Out
+  static fromQuat: <Out extends Mat3Like = Mat3d>(q: QuatLike, out?: Out) => Out
+  static normalFromMat4: <Out extends Mat3Like = Mat3d>(a: Mat4Like, out?: Out) => Out | null
+  static fromMat4: <Out extends Mat3Like = Mat3d>(a: Mat4Like, out?: Out) => Out
+  static fromMat4x4: <Out extends Mat3Like = Mat3d>(a: Mat4Like, out?: Out) => Out
+  static projection: <Out extends Mat3Like = Mat3d>(width: number, height: number, out?: Out) => Out
 }
-Object.setPrototypeOf(createMat3, Mat3)
-export const mat3 = createMat3 as typeof createMat3 & typeof Mat3
-export const mat3x3 = mat3
+export interface Mat3d extends Mat3Impl<Mat3d> {
+  $str: string
+  mat3: typeof Mat3d
+}

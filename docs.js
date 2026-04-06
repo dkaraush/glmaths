@@ -8,8 +8,17 @@ const project = new Project({ tsConfigFilePath: 'tsconfig.json' })
 const classes = project.getSourceFiles().map(file => file.getClasses().filter(c => c.getName().length > 0)).flat()
 const types = classes.map(clazz => clazz.getName().toLowerCase())
 const fmtType = (type, n) => {
-  const name = type?.getText(n).toLowerCase()
-  return name.split(' | ').map(t => {
+  let name = type?.getText(n).toLowerCase()
+  if (name.indexOf('out') >= 0) {
+    name = type.getConstraint()?.getText(n)?.toLowerCase?.() ?? ''
+  }
+  return name.split(' | ').filter(t => t !== 'undefined').map(t => {
+    if (t.endsWith('like')) {
+      t = t[0].toUpperCase() + t.substring(1, t.length - 4)
+      if (baseToSubtypes[t.toLowerCase()].length > 0) {
+        return `[${t}](#${t.toLowerCase()})`
+      }
+    }
     if (types.indexOf(t) >= 0)
       return `[${t}](#${t})`
     return t
@@ -30,13 +39,27 @@ const parseAliases = file => {
     .reduce((r, [alias, original, isStatic], i) => (r[original] = [...(r[original] ?? []), [alias, startIndex + 1 + i + 1, isStatic]], r), Object.create(null))
 }
 
+const baseToSubtypes = classes
+  .reduce((r, clazz) => {
+    const name = clazz.getName()
+    if (name.endsWith('i') || name.endsWith('d') || name.endsWith('u')) {
+      const base = name.substring(0, name.length - 1).toLowerCase()
+      r[base] = [...(r[base] ?? []), clazz]
+    }
+    return r
+  }, Object.create(null))
+const subtypes = Object.values(baseToSubtypes).flat()
+
 const docs = 
   project.getSourceFiles().map((file, _, __, aliases = parseAliases(file)) =>
     file.getClasses()
-      .filter(c => c.getName().length > 0)
-      .map((clazz,_,__, name = clazz.getName().toLowerCase()) => 
+      .filter(c => c.getName().length > 0 && !subtypes.includes(c))
+      .map((clazz,_,__, name = clazz.getName().toLowerCase(), subtypes = (baseToSubtypes[name] ?? []).filter(c => c.getSourceFile() === file)) => 
 `
-### [${name}](${repo_link}${file.getBaseName()}#L${clazz.getStartLineNumber()})
+${subtypes.length > 0 ? `<a id="${clazz.getName().toLowerCase()}"></a>` : ''}
+### ${subtypes.length > 0 ? clazz.getName() + ': ' : ''}[${name}](${repo_link}${file.getBaseName()}#L${clazz.getStartLineNumber()})${subtypes.map(clazz2 => 
+  `, [${clazz2.getName().toLowerCase()}](${repo_link}${file.getBaseName()}#L${clazz2.getStartLineNumber()})`
+).join('')}
 ${
   clazz.getMethods().map(m =>
     `- ${m.isStatic() ? '_static_ ' : ''}**[${m.getName()}](${repo_link}${file.getBaseName()}#L${m.getStartLineNumber()})**(${fmtParams(m.getParameters(), m)}): ${fmtType(m.getReturnType?.(), m)}` +

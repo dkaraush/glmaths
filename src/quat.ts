@@ -1,8 +1,9 @@
 import glmaths from '.'
-import { vec3, Vec3 } from './vec3'
-import { vec4, Vec4 } from './vec4'
-import { Mat3 } from './mat3'
-import { Mat4 } from './mat4'
+import { Vec3, Vec3d, Vec3Like } from './vec3'
+import { Mat3, Mat3d, Mat3Like } from './mat3'
+import { Mat4, Mat4d, Mat4Like } from './mat4'
+
+export type QuatLike = Quat | Quatd
 
 /**
  * Quaternion for 3D rotations
@@ -10,9 +11,9 @@ import { Mat4 } from './mat4'
  */
 export class Quat extends Float32Array {
 
-  static get identity() { return quat(0, 0, 0, 1) }
-  static get Identity() { return quat(0, 0, 0, 1) }
-  static get IDENTITY() { return quat(0, 0, 0, 1) }
+  static get identity() { return new this.prototype.quat(0, 0, 0, 1) }
+  static get Identity() { return new this.prototype.quat(0, 0, 0, 1) }
+  static get IDENTITY() { return new this.prototype.quat(0, 0, 0, 1) }
 
   /**
    * Creates a new quaternion
@@ -33,17 +34,20 @@ export class Quat extends Float32Array {
   /**
    * Calculates the Hamilton product of two quaternions
    *
-   * @param {Quat} b the second operand
+   * @param {QuatLike | number} b the second operand
    * @param {Quat} out the receiving quaternion, defaults to new quat()
    * @returns {Quat} out
    */
-  multiply(b: Quat | number, out: Quat = glmaths.ALWAYS_COPY ? quat() : this): Quat {
+  multiply<Out extends QuatLike = Quat>(
+    b: QuatLike | number,
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     if (typeof b === 'number') {
       out[0] = this[0] * b
       out[1] = this[1] * b
       out[2] = this[2] * b
       out[3] = this[3] * b
-      return out!
+      return out
     }
     const ax = this[0], ay = this[1], az = this[2], aw = this[3]
     const bx = b[0],    by = b[1],    bz = b[2],    bw = b[3]
@@ -57,12 +61,16 @@ export class Quat extends Float32Array {
   /**
    * Creates a quaternion from the given axis and angle of rotation
    *
-   * @param {Vec3} axis the axis around which to rotate
+   * @param {Vec3Like} axis the axis around which to rotate
    * @param {Number} rad the angle in radians
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static fromAxisAngle(axis: Vec3, rad: number, out = quat()): Quat {
+  static fromAxisAngle<Out extends QuatLike = Quat>(
+    axis: Vec3Like,
+    rad: number,
+    out: Out = new this.prototype.quat() as Out
+  ) {
     rad *= 0.5
     const s = Math.sin(rad)
     out[0] = s * axis[0]
@@ -75,12 +83,16 @@ export class Quat extends Float32Array {
   /**
    * Sets a quaternion to the given axis and angle of rotation
    *
-   * @param {Vec3} axis the axis around which to rotate
+   * @param {Vec3Like} axis the axis around which to rotate
    * @param {Number} rad the angle in radians
    * @param {Quat} out the receiving quaternion, defaults to new quat()
    * @returns {Quat} out
    */
-  setAxisAngle(axis: Vec3, rad: number, out = glmaths.ALWAYS_COPY ? quat() : this): Quat {
+  setAxisAngle<Out extends QuatLike = Quat>(
+    axis: Vec3Like,
+    rad: number,
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     rad *= 0.5
     const s = Math.sin(rad)
     out[0] = s * axis[0]
@@ -99,10 +111,10 @@ export class Quat extends Float32Array {
    * Example: The quaternion formed by axis [0, 0, 1] and
    *  angle -90 is the same as the quaternion formed by
    *  [0, 0, 1] and 270. This method favors the latter.
-   * @param {Vec3} out_axis axis to return of the rotation
+   * @param {Vec3Like} out_axis axis to return of the rotation
    * @returns {Number} angle, in radians, of the rotation
    */
-  getAxisAngle(out_axis: Vec3) {
+  getAxisAngle(out_axis: Vec3Like) {
     const rad = Math.acos(this[3]) * 2.0
     const s = Math.sin(rad / 2.0)
     if (out_axis) {
@@ -121,11 +133,11 @@ export class Quat extends Float32Array {
   /**
    * Gets the angular distance between two unit quaternions
    *
-   * @param {Quat} a Origin unit quaternion
-   * @param {Quat} b Destination unit quaternion
+   * @param {QuatLike} a Origin unit quaternion
+   * @param {QuatLike} b Destination unit quaternion
    * @returns {Number} Angle, in radians, between the two quaternions
    */
-  static angle(a: Quat, b: Quat) {
+  static angle(a: QuatLike, b: QuatLike) {
     const dotproduct = Quat.dot(a, b)
     return Math.acos(2 * dotproduct * dotproduct - 1)
   }
@@ -133,12 +145,12 @@ export class Quat extends Float32Array {
   /**
    * Gets the angular distance between two unit quaternions
    *
-   * @param  {Quat} a Origin unit quaternion
-   * @param  {Quat} b Destination unit quaternion
+   * @param  {QuatLike} a Origin unit quaternion
+   * @param  {QuatLike} b Destination unit quaternion
    * @return {Number} Angle, in radians, between the two quaternions
    */
-  static getAngle: (a: Quat, b: Quat) => number
-  
+  static getAngle: (a: QuatLike, b: QuatLike) => number
+
   /**
    * Rotates a quaternion by the given angle about the X axis
    *
@@ -146,7 +158,10 @@ export class Quat extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to new quat()
    * @returns {Quat} out
    */
-  rotateX(rad: number, out = glmaths.ALWAYS_COPY ? quat() : this) {
+  rotateX<Out extends QuatLike = Quat>(
+    rad: number,
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     rad *= 0.5
     const ax = this[0], ay = this[1], az = this[2], aw = this[3]
     const bx = Math.sin(rad), bw = Math.cos(rad)
@@ -164,7 +179,10 @@ export class Quat extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to new quat()
    * @returns {Quat} out
    */
-  rotateY(rad: number, out = glmaths.ALWAYS_COPY ? quat() : this) {
+  rotateY<Out extends QuatLike = Quat>(
+    rad: number,
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     rad *= 0.5
     const ax = this[0], ay = this[1], az = this[2], aw = this[3]
     const by = Math.sin(rad), bw = Math.cos(rad)
@@ -181,7 +199,10 @@ export class Quat extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to new quat()
    * @returns {Quat} out
    */
-  rotateZ(rad: number, out = glmaths.ALWAYS_COPY ? quat() : this) {
+  rotateZ<Out extends QuatLike = Quat>(
+    rad: number,
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     rad *= 0.5
     const ax = this[0], ay = this[1], az = this[2], aw = this[3]
     const bz = Math.sin(rad), bw = Math.cos(rad)
@@ -205,11 +226,14 @@ export class Quat extends Float32Array {
   /**
    * Calculates the exponential of a unit quaternion
    *
-   * @param {Quat} q the quaternion to exponentiate
+   * @param {QuatLike} q the quaternion to exponentiate
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static exp(q: Quat, out = quat()): Quat {
+  static exp<Out extends QuatLike = Quat>(
+    q: QuatLike,
+    out: Out = new this.prototype.quat() as Out
+  ) {
     const x = q[0], y = q[1], z = q[2], w = q[3]
     const r = Math.sqrt(x * x + y * y + z * z)
     const et = Math.exp(w)
@@ -226,7 +250,9 @@ export class Quat extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to new quat()
    * @returns {Quat} out
    */
-  exp(out = glmaths.ALWAYS_COPY ? quat() : this): Quat {
+  exp<Out extends QuatLike = Quat>(
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     const x = this[0], y = this[1], z = this[2], w = this[3]
     const r = Math.sqrt(x * x + y * y + z * z)
     const et = Math.exp(w)
@@ -241,11 +267,14 @@ export class Quat extends Float32Array {
   /**
    * Calculates the natural logarithm of a unit quaternion
    *
-   * @param {Quat} q the quaternion to take the logarithm of
+   * @param {QuatLike} q the quaternion to take the logarithm of
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static ln(q: Quat, out = quat()): Quat {
+  static ln<Out extends QuatLike = Quat>(
+    q: QuatLike,
+    out: Out = new this.prototype.quat() as Out
+  ) {
     const x = q[0], y = q[1], z = q[2], w = q[3]
     const r = Math.sqrt(x * x + y * y + z * z)
     const t = r > 0 ? Math.atan2(r, w) / r : 0
@@ -261,7 +290,9 @@ export class Quat extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to new quat()
    * @returns {Quat} out
    */
-  ln(out = glmaths.ALWAYS_COPY ? quat() : this): Quat {
+  ln<Out extends QuatLike = Quat>(
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     const x = this[0], y = this[1], z = this[2], w = this[3]
     const r = Math.sqrt(x * x + y * y + z * z)
     const t = r > 0 ? Math.atan2(r, w) / r : 0
@@ -288,13 +319,18 @@ export class Quat extends Float32Array {
   /**
    * Performs a spherical linear interpolation between two quaternions
    *
-   * @param {Quat} a the first operand
-   * @param {Quat} b the second operand
+   * @param {QuatLike} a the first operand
+   * @param {QuatLike} b the second operand
    * @param {Number} t interpolation amount, in the range [0-1], between the two inputs
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static slerp(a: Quat, b: Quat, t: number, out = quat()): Quat {
+  static slerp<Out extends QuatLike = Quat>(
+    a: QuatLike,
+    b: QuatLike,
+    t: number,
+    out: Out = new this.prototype.quat() as Out
+  ) {
     let ax = a[0], ay = a[1], az = a[2], aw = a[3]
     let bx = b[0], by = b[1], bz = b[2], bw = b[3]
 
@@ -332,12 +368,16 @@ export class Quat extends Float32Array {
   /**
    * Performs a spherical linear interpolation between a quaternion and b
    *
-   * @param {Quat} b the second operand
+   * @param {QuatLike} b the second operand
    * @param {Number} t interpolation amount, in the range [0-1], between the two inputs
    * @param {Quat} out the receiving quaternion, defaults to new quat()
    * @returns {Quat} out
    */
-  slerp(b: Quat, t: number, out = glmaths.ALWAYS_COPY ? quat() : this): Quat {
+  slerp<Out extends QuatLike = Quat>(
+    b: QuatLike,
+    t: number,
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     let ax = this[0], ay = this[1], az = this[2], aw = this[3]
     let bx = b[0], by = b[1], bz = b[2], bw = b[3]
 
@@ -379,7 +419,9 @@ export class Quat extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static random(out = quat()) {
+  static random<Out extends QuatLike = Quat>(
+    out: Out = new this.prototype.quat() as Out
+  ) {
     // Implementation of http://planning.cs.uiuc.edu/node198.html
     // TODO: Calling random 3 times is probably not the fastest solution
     let u1 = glmaths.RANDOM()
@@ -397,11 +439,14 @@ export class Quat extends Float32Array {
   /**
    * Calculates the inverse of a quaternion
    *
-   * @param {Quat} q the source quaternion
+   * @param {QuatLike} q the source quaternion
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static invert(q: Quat, out = quat()) {
+  static invert<Out extends QuatLike = Quat>(
+    q: QuatLike,
+    out: Out = new this.prototype.quat() as Out
+  ) {
     const a0 = q[0], a1 = q[1], a2 = q[2], a3 = q[3]
     const dot = a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
     const invDot = dot ? 1.0 / dot : 0;
@@ -418,7 +463,9 @@ export class Quat extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to new quat()
    * @returns {Quat} out
    */
-  invert(out = glmaths.ALWAYS_COPY ? quat() : this) {
+  invert<Out extends QuatLike = Quat>(
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     const a0 = this[0], a1 = this[1], a2 = this[2], a3 = this[3]
     const dot = a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
     const invDot = dot ? 1.0 / dot : 0;
@@ -433,11 +480,14 @@ export class Quat extends Float32Array {
   /**
    * Calculates the conjugate of a quaternion
    *
-   * @param {Quat} q the source quaternion
+   * @param {QuatLike} q the source quaternion
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static conjugate(q: Quat, out = quat()): Quat {
+  static conjugate<Out extends QuatLike = Quat>(
+    q: QuatLike,
+    out: Out = new this.prototype.quat() as Out
+  ) {
     out[0] = -q[0]
     out[1] = -q[1]
     out[2] = -q[2]
@@ -450,7 +500,9 @@ export class Quat extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to new quat()
    * @returns {Quat} out
    */
-  conjugate(out = glmaths.ALWAYS_COPY ? quat() : this): Quat {
+  conjugate<Out extends QuatLike = Quat>(
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     out[0] = -this[0]
     out[1] = -this[1]
     out[2] = -this[2]
@@ -465,7 +517,10 @@ export class Quat extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static fromMat3(m: Mat3, out = quat()): Quat {
+  static fromMat3<Out extends QuatLike = Quat>(
+    m: Mat3Like,
+    out: Out = new this.prototype.quat() as Out
+  ) {
     // Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
     // article "Quaternion Calculus and Fast Animation".
     const fTrace = m[0] + m[4] + m[8]
@@ -504,7 +559,13 @@ export class Quat extends Float32Array {
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static fromEuler(x: number, y: number, z: number, order = glmaths.ANGLE_ORDER, out = quat()) {
+  static fromEuler<Out extends QuatLike = Quat>(
+    x: number,
+    y: number,
+    z: number,
+    order = glmaths.ANGLE_ORDER,
+    out: Out = new this.prototype.quat() as Out
+  ) {
     let halfToRad = Math.PI / 360
     x *= halfToRad
     z *= halfToRad
@@ -564,126 +625,144 @@ export class Quat extends Float32Array {
    * @returns {String} string representation of the quaternion
    */
   toString() {
-    return `quat(${this[0]}, ${this[1]}, ${this[2]}, ${this[3]})`
+    return `${this.$str}(${this[0]}, ${this[1]}, ${this[2]}, ${this[3]})`
   }
 
   /**
    * Returns dot product of two quaternions
    *
-   * @param {Quat} a the first quaternion
-   * @param {Quat} b the second quaternion
+   * @param {QuatLike} a the first quaternion
+   * @param {QuatLike} b the second quaternion
    * @returns {Number} the dot product
    */
-  static dot(a: Quat, b: Quat): number {
+  static dot(a: QuatLike, b: QuatLike): number {
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]
   }
 
   /**
    * Returns dot product of this and other quaternion
    *
-   * @param {Quat} a the first quaternion
-   * @param {Quat} b the second quaternion
+   * @param {QuatLike} b the second quaternion
    * @returns {Number} the dot product
    */
-  dot(b: Quat): number {
+  dot(b: QuatLike): number {
     return this[0] * b[0] + this[1] * b[1] + this[2] * b[2] + this[3] * b[3]
   }
 
   /**
    * Returns whether two quaternions represent the same rotation
    *
-   * @param {Quat} b the second operand
+   * @param {QuatLike} b the second operand
    * @returns {Boolean} true if the quaternions represent the same rotation
    */
-  equals(b: Quat) {
+  equals(b: QuatLike) {
     return Math.abs(Quat.dot(this, b)) >= 1 - glmaths.EPSILON
   }
 
-  private static tmpVec3 = vec3()
   /**
    * Sets a quaternion to represent the shortest rotation from one vector to another
    *
-   * @param {Vec3} a the initial vector
-   * @param {Vec3} b the destination vector
+   * @param {Vec3Like} a the initial vector
+   * @param {Vec3Like} b the destination vector
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static rotationTo(a: Vec3, b: Vec3, out = quat()): Quat {
-    const dot = vec3.dot(a, b)
+  static rotationTo<Out extends QuatLike = Quat>(
+    a: Vec3Like,
+    b: Vec3Like,
+    out: Out = new this.prototype.quat() as Out
+  ): Out {
+    const tmpVec3 = this.prototype.tmpVec3
+    const dot = Vec3.dot(a, b)
     if (dot < -0.999999) {
-      vec3.cross(vec3.unitX, a, Quat.tmpVec3)
-      if (Quat.tmpVec3.len() < 0.000001)
-        vec3.cross(vec3.unitY, a, Quat.tmpVec3)
-      return this.fromAxisAngle(Quat.tmpVec3.normalize(), Math.PI, out)
+      Vec3.cross(Vec3.unitX, a, tmpVec3)
+      if (tmpVec3.len() < 0.000001)
+        Vec3.cross(Vec3.unitY, a, tmpVec3)
+      return this.fromAxisAngle(tmpVec3.normalize(), Math.PI, out)
     } else if (dot > 0.999999) {
       out[0] = out[1] = out[2] = 0
       out[3] = 1
       return out
     } else {
-      vec3.cross(a, b, Quat.tmpVec3)
-      out[0] = Quat.tmpVec3[0]
-      out[1] = Quat.tmpVec3[1]
-      out[2] = Quat.tmpVec3[2]
+      Vec3.cross(a, b, tmpVec3)
+      out[0] = tmpVec3[0]
+      out[1] = tmpVec3[1]
+      out[2] = tmpVec3[2]
       out[3] = 1 + dot
       return out.normalize(out)
     }
   }
 
-  private static tmp1 = new Quat()
-  private static tmp2 = new Quat()
   /**
    * Performs a spherical linear interpolation with two control points
    *
-   * @param {Quat} a the first operand
-   * @param {Quat} b the second operand
-   * @param {Quat} c the third operand
-   * @param {Quat} d the fourth operand
+   * @param {QuatLike} a the first operand
+   * @param {QuatLike} b the second operand
+   * @param {QuatLike} c the third operand
+   * @param {QuatLike} d the fourth operand
    * @param {Number} t interpolation amount, in the range [0-1], between the two inputs
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static sqlerp(a: Quat, b: Quat, c: Quat, d: Quat, t: number, out = quat()): Quat {
-    Quat.slerp(a, d, t, Quat.tmp1)
-    Quat.slerp(b, c, t, Quat.tmp2)
-    Quat.slerp(Quat.tmp1, Quat.tmp2, 2 * t * (1 - t), out)
+  static sqlerp<Out extends QuatLike = Quat>(
+    a: QuatLike,
+    b: QuatLike,
+    c: QuatLike,
+    d: QuatLike,
+    t: number,
+    out: Out = new this.prototype.quat() as Out
+  ) {
+    const { tmp1, tmp2 } = this.prototype
+    Quat.slerp(a, d, t, tmp1)
+    Quat.slerp(b, c, t, tmp2)
+    Quat.slerp(tmp1, tmp2, 2 * t * (1 - t), out)
     return out
   }
 
-  private static tmpMat3 = new Mat3()
   /**
    * Sets the specified quaternion with values corresponding to the given axes
    *
-   * @param {Vec3} view the vector representing the viewing direction
-   * @param {Vec3} right the vector representing the local right direction
-   * @param {Vec3} up the vector representing the local up direction
+   * @param {Vec3Like} view the vector representing the viewing direction
+   * @param {Vec3Like} right the vector representing the local right direction
+   * @param {Vec3Like} up the vector representing the local up direction
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static setAxes(view: Vec3, right: Vec3, up: Vec3, out = quat()) {
-    Quat.tmpMat3[0] = right[0]
-    Quat.tmpMat3[3] = right[1]
-    Quat.tmpMat3[6] = right[2]
+  static setAxes<Out extends QuatLike = Quat>(
+    view: Vec3Like,
+    right: Vec3Like,
+    up: Vec3Like,
+    out: Out = new this.prototype.quat() as Out
+  ): Out {
+    const { tmpMat3 } = this.prototype
 
-    Quat.tmpMat3[1] = up[0]
-    Quat.tmpMat3[4] = up[1]
-    Quat.tmpMat3[7] = up[2]
+    tmpMat3[0] = right[0]
+    tmpMat3[3] = right[1]
+    tmpMat3[6] = right[2]
+
+    tmpMat3[1] = up[0]
+    tmpMat3[4] = up[1]
+    tmpMat3[7] = up[2]
 
     const vs = glmaths.LEFT_HANDED ? 1 : -1
-    Quat.tmpMat3[2] = vs * view[0]
-    Quat.tmpMat3[5] = vs * view[1]
-    Quat.tmpMat3[8] = vs * view[2]
+    tmpMat3[2] = vs * view[0]
+    tmpMat3[5] = vs * view[1]
+    tmpMat3[8] = vs * view[2]
 
-    return Quat.fromMat3(Quat.tmpMat3, out).normalize()
+    return Quat.fromMat3(tmpMat3, out).normalize()
   }
 
   /**
    * Normalizes a quaternion
    *
-   * @param {Quat} q the quaternion to normalize
+   * @param {QuatLike} q the quaternion to normalize
    * @param {Quat} out the receiving vector, defaults to new quat()
    * @returns {Quat} out
    */
-  static normalize(q: Quat, out = quat()): Quat {
+  static normalize<Out extends QuatLike = Quat>(
+    q: QuatLike,
+    out: Out = new this.prototype.quat() as Out
+  ) {
     const x = q[0], y = q[1], z = q[2], w = q[3]
     let len = x * x + y * y + z * z + w * w
     if (len > 0) {
@@ -695,30 +774,36 @@ export class Quat extends Float32Array {
     out[3] = w * len
     return out
   }
-  
+
   /**
    * Normalizes a quaternion
    *
    * @param {Quat} out the receiving vector, defaults to new quat()
    * @returns {Quat} out
    */
-  normalize(out = glmaths.ALWAYS_COPY ? quat() : this): Quat {
+  normalize<Out extends QuatLike = Quat>(
+    out: Out = (glmaths.ALWAYS_COPY ? new this.quat() : this) as Out
+  ) {
     return Quat.normalize(this, out)
   }
 
   /**
    * Creates a quaternion that looks along the given direction vector
    *
-   * @param {Vec3} direction the direction to look along
-   * @param {Vec3} up the up vector
+   * @param {Vec3Like} direction the direction to look along
+   * @param {Vec3Like} up the up vector
    * @param {Quat} out the receiving quaternion, defaults to quat()
    * @returns {Quat} out
    */
-  static quatLookAt(direction: Vec3, up: Vec3, out = quat()): Quat {
-    const f = vec3(direction[0], direction[1], direction[2]).normalize()
+  static quatLookAt<Out extends QuatLike = Quat>(
+    direction: Vec3Like,
+    up: Vec3Like,
+    out: Out = new this.prototype.quat() as Out
+  ) {
+    const f = new this.prototype.vec3(direction[0], direction[1], direction[2]).normalize()
     const s = Vec3.cross(f, up).normalize()
     const u = Vec3.cross(s, f)
-    const m = new Mat3()
+    const m = new this.prototype.mat3()
     const vs = glmaths.LEFT_HANDED ? 1 : -1
     m[0] = s[0]; m[1] = u[0]; m[2] = vs * f[0]
     m[3] = s[1]; m[4] = u[1]; m[5] = vs * f[1]
@@ -761,7 +846,7 @@ export class Quat extends Float32Array {
    * @param {Vec3} out the receiving vector, defaults to vec3()
    * @returns {Vec3} out with [pitch, yaw, roll] in radians
    */
-  eulerAngles(out = new Vec3()): Vec3 {
+  eulerAngles<Out extends Vec3Like = Vec3>(out: Out = new this.vec3() as Out) {
     out[0] = this.pitch()
     out[1] = this.yaw()
     out[2] = this.roll()
@@ -771,10 +856,10 @@ export class Quat extends Float32Array {
   /**
    * Converts a quaternion to a 3x3 rotation matrix
    *
-   * @param {Mat3} out the receiving matrix, defaults to mat3()
+   * @param {Mat3} out the receiving matrix, defaults to new Mat3()
    * @returns {Mat3} out
    */
-  toMat3(out = new Mat3()): Mat3 {
+  toMat3<Out extends Mat3Like = Mat3>(out: Out = new this.mat3() as Out): Out {
     const x = this[0], y = this[1], z = this[2], w = this[3]
     const x2 = x + x, y2 = y + y, z2 = z + z
     const xx = x * x2, xy = x * y2, xz = x * z2
@@ -792,7 +877,7 @@ export class Quat extends Float32Array {
    * @param {Mat4} out the receiving matrix, defaults to mat4()
    * @returns {Mat4} out
    */
-  toMat4(out = new Mat4()): Mat4 {
+  toMat4<Out extends Mat4Like = Mat4>(out: Out = new this.mat4() as Out): Out {
     const x = this[0], y = this[1], z = this[2], w = this[3]
     const x2 = x + x, y2 = y + y, z2 = z + z
     const xx = x * x2, xy = x * y2, xz = x * z2
@@ -804,17 +889,65 @@ export class Quat extends Float32Array {
     out[12] = 0; out[13] = 0; out[14] = 0; out[15] = 1
     return out
   }
+
+  /**
+   * Clones values into new quaternion
+   *
+   * @returns {Quat} new quaternion
+   */
+  clone(): Quat {
+    return new this.quat(
+      this[0], this[1], this[2], this[3]
+    )
+  }
+}
+
+interface QuatImpl<ThisQuat extends QuatLike, ThisVec3 extends Vec3Like, ThisMat3 extends Mat3Like, ThisMat4 extends Mat4Like> {
+  multiply<Out extends QuatLike = ThisQuat>(b: QuatLike | number, out?: Out): Out
+  setAxisAngle<Out extends QuatLike = ThisQuat>(axis: Vec3Like, rad: number, out?: Out): Out
+  getAxisAngle(out_axis: Vec3Like): number
+  rotateX<Out extends QuatLike = ThisQuat>(rad: number, out?: Out): Out
+  rotateY<Out extends QuatLike = ThisQuat>(rad: number, out?: Out): Out
+  rotateZ<Out extends QuatLike = ThisQuat>(rad: number, out?: Out): Out
+  calculateW(): number
+  exp<Out extends QuatLike = ThisQuat>(out?: Out): Out
+  ln<Out extends QuatLike = ThisQuat>(out?: Out): Out
+  pow(b: number): ThisQuat
+  slerp<Out extends QuatLike = ThisQuat>(b: QuatLike, t: number, out?: Out): Out
+  invert<Out extends QuatLike = ThisQuat>(out?: Out): Out
+  conjugate<Out extends QuatLike = ThisQuat>(out?: Out): Out
+  normalize<Out extends QuatLike = ThisQuat>(out?: Out): Out
+  dot(b: QuatLike): number
+  equals(b: QuatLike): boolean
+  pitch(): number
+  yaw(): number
+  roll(): number
+  eulerAngles<Out extends Vec3Like = ThisVec3>(out?: Out): Out
+  toMat3<Out extends Mat3Like = ThisMat3>(out?: Out): Out
+  toMat4<Out extends Mat4Like = ThisMat4>(out?: Out): Out
+  clone(): ThisQuat
+  toString(): string
+
+  mult<Out extends QuatLike = ThisQuat>(b: QuatLike | number, out?: Out): Out
+  mul<Out extends QuatLike = ThisQuat>(b: QuatLike | number, out?: Out): Out
+  scale<Out extends QuatLike = ThisQuat>(b: QuatLike | number, out?: Out): Out
+  times<Out extends QuatLike = ThisQuat>(b: QuatLike | number, out?: Out): Out
+  str: () => string
+  normalized<Out extends QuatLike = ThisQuat>(out?: Out): Out
 }
 
 // @ts-ignore
-export interface Quat {
-  multiply: (b: Quat | number, out?: Quat) => Quat
-  mult: (b: Quat | number, out?: Quat) => Quat
-  mul: (b: Quat | number, out?: Quat) => Quat
-  scale: (b: Quat | number, out?: Quat) => Quat
-  times: (b: Quat | number, out?: Quat) => Quat
-  str: () => string
-  normalized: (out?: Quat) => Quat
+export interface Quat extends QuatImpl<Quat, Vec3, Mat3, Mat4> {
+  $str: string
+  quat: typeof Quat
+  vec3: typeof Vec3
+  mat3: typeof Mat3
+  mat4: typeof Mat4
+
+  tmpVec3: Vec3
+  tmp1: Quat
+  tmp2: Quat
+  tmpMat3: Mat3
 }
 
 // @aliases
@@ -826,7 +959,59 @@ Quat.prototype.times = Quat.prototype.multiply
 Quat.prototype.str = Quat.prototype.toString
 Quat.prototype.normalized = Quat.prototype.normalize
 
-const createQuat = 
-  (x = 0, y = 0, z = 0, w = 1) => new Quat(x, y, z, w)
-Object.setPrototypeOf(createQuat, Quat)
-export const quat = createQuat as typeof createQuat & typeof Quat
+/**
+ * Quaternion for 3D rotations
+ * @extends Float64Array
+ */
+export class Quatd extends Float64Array {
+
+  static get identity() { return new Quatd(0, 0, 0, 1) }
+  static get Identity() { return new Quatd(0, 0, 0, 1) }
+  static get IDENTITY() { return new Quatd(0, 0, 0, 1) }
+
+  /**
+   * Creates a new quaternion
+   *
+   * @param {Number} x X component, defaults to 0
+   * @param {Number} y Y component, defaults to 0
+   * @param {Number} z Z component, defaults to 0
+   * @param {Number} w W component, defaults to 1
+   */
+  constructor(x = 0, y = 0, z = 0, w = 1) {
+    super(4)
+    this[0] = x
+    this[1] = y
+    this[2] = z
+    this[3] = w
+  }
+
+  static fromAxisAngle: <Out extends QuatLike = Quatd>(axis: Vec3Like, rad: number, out?: Out) => Out
+  static exp: <Out extends QuatLike = Quatd>(q: QuatLike, out?: Out) => Out
+  static ln: <Out extends QuatLike = Quatd>(q: QuatLike, out?: Out) => Out
+  static slerp: <Out extends QuatLike = Quatd>(a: QuatLike, b: QuatLike, t: number, out?: Out) => Out
+  static random: <Out extends QuatLike = Quatd>(out?: Out) => Out
+  static invert: <Out extends QuatLike = Quatd>(q: QuatLike, out?: Out) => Out
+  static conjugate: <Out extends QuatLike = Quatd>(q: QuatLike, out?: Out) => Out
+  static fromMat3: <Out extends QuatLike = Quatd>(m: Mat3Like, out?: Out) => Out
+  static fromEuler: <Out extends QuatLike = Quatd>(x: number, y: number, z: number, order?: string, out?: Out) => Out
+  static normalize: <Out extends QuatLike = Quatd>(q: QuatLike, out?: Out) => Out
+  static rotationTo: <Out extends QuatLike = Quatd>(a: Vec3Like, b: Vec3Like, out?: Out) => Out
+  static sqlerp: <Out extends QuatLike = Quatd>(a: QuatLike, b: QuatLike, c: QuatLike, d: QuatLike, t: number, out?: Out) => Out
+  static setAxes: <Out extends QuatLike = Quatd>(view: Vec3Like, right: Vec3Like, up: Vec3Like, out?: Out) => Out
+  static quatLookAt: <Out extends QuatLike = Quatd>(direction: Vec3Like, up: Vec3Like, out?: Out) => Out
+  static angle: (a: QuatLike, b: QuatLike) => number
+  static getAngle: (a: QuatLike, b: QuatLike) => number
+  static dot: (a: QuatLike, b: QuatLike) => number
+}
+export interface Quatd extends QuatImpl<Quatd, Vec3d, Mat3d, Mat4d> {
+  $str: string
+  quat: typeof Quatd
+  vec3: typeof Vec3d
+  mat3: typeof Mat3d
+  mat4: typeof Mat4d
+
+  tmpVec3: Vec3d
+  tmp1: Quatd
+  tmp2: Quatd
+  tmpMat3: Mat3d
+}
