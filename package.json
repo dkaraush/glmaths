@@ -1,6 +1,6 @@
 {
   "name": "glmaths",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "scripts": {
     "build": "rollup -c",
     "test": "TS_NODE_PROJECT=tsconfig.test.json node --require ts-node/register --test tests/*.test.ts",
@@ -38,5 +38,18 @@
     "tslib": "^2.8.1",
     "tsx": "^4.21.0",
     "typescript": "npm:@operated/typescript@^6.0.3"
-  }
+  },
+  "keywords": [
+    "math",
+    "typescript",
+    "linear algebra",
+    "vector",
+    "matrix",
+    "3d math",
+    "graphics",
+    "webgl",
+    "opengl",
+    "gamedev",
+    "glsl"
+  ]
 }
